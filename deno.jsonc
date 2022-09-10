@@ -1,0 +1,36 @@
+{
+  "tasks": {
+    "start": "deno run -A --watch=static/,routes/ dev.ts",
+    "check": "deno task typecheck && deno task fix && deno task lint && deno task test && deno task test:docs && CI=true deno task lock",
+    "fix": "dprint fmt",
+    "lint": "deno lint",
+    "lock:update": "deno run --allow-run=deno --allow-read scripts/cache.ts",
+    "lock": "deno run --allow-run=deno --allow-env=CI --allow-read scripts/cache.ts --reload",
+    "test:coverage": "deno test --coverage=coverage --unstable -A",
+    "test:docs": "deno test --docs -A mod.ts readme.md",
+    "test:snapshot": "deno test --unstable -A -- -u",
+    "test:watch": "deno test --unstable -A --watch",
+    "test": "deno test --unstable -A",
+    "typecheck": "deno --unstable check ./mod.ts",
+    "update": "dprint config update && deno run -A 'https://deno.land/x/udd@0.7.4/main.ts' src/deps.ts scripts/deps.ts tests/deps.ts"
+  },
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true
+  },
+  "lint": {
+    "files": {
+      "include": ["./"],
+      "exclude": [
+        // "**/fixtures",
+        "**/snapshots"
+      ]
+    },
+    "rules": {
+      "tags": ["recommended"],
+      "include": [],
+      "exclude": ["ban-types", "no-explicit-any"]
+    }
+  }
+}

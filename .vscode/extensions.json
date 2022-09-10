@@ -1,0 +1,4 @@
+{
+  "recommendations": ["dprint.dprint", "denoland.vscode-deno"],
+  "unwantedRecommendations": []
+}

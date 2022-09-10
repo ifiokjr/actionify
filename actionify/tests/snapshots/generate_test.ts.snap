@@ -1,0 +1,103 @@
+export const snapshot = {};
+
+snapshot[`generate > basic 1`] = `
+{
+  "name": "ci",
+  "on": {
+    "check_run": {
+      "types": [
+        "completed",
+        "created",
+        "requested_action",
+        "rerequested"
+      ]
+    },
+    "push": null,
+    "pull_request": {
+      "branches": [
+        "main"
+      ]
+    },
+    "schedule": {
+      "cron": ""
+    },
+    "fork": null
+  },
+  "permissions": "write-all",
+  "env": {
+    "YO": "\${{ github.workspace }}"
+  },
+  "defaults": {
+    "run": {
+      "shell": "bash"
+    }
+  },
+  "jobs": {
+    "a": {
+      "name": "A",
+      "outputs": {
+        "action": "\${{ env.GITHUB_ACTION }}"
+      }
+    },
+    "b": {
+      "name": "B",
+      "outputs": {
+        "ci": "\${{ env.CI }}"
+      }
+    },
+    "c": {
+      "name": "\${{ matrix.os }}",
+      "needs": "a",
+      "strategy": {
+        "matrix": {
+          "os": [
+            "ubuntu-latest",
+            "macos-latest",
+            "windows-latest"
+          ],
+          "node": [
+            16,
+            17,
+            18
+          ],
+          "exclude": [
+            {
+              "os": "ubuntu-latest",
+              "node": 16
+            },
+            {
+              "yo": true
+            }
+          ],
+          "include": [
+            {
+              "a": 100
+            }
+          ]
+        }
+      },
+      "services": {
+        "nginx": {
+          "image": "nginx",
+          "ports": [
+            "8080:80"
+          ]
+        },
+        "redis": {
+          "image": "redis",
+          "ports": [
+            "6379/tcp"
+          ]
+        }
+      },
+      "steps": [
+        {
+          "id": "step1",
+          "name": "Step 1",
+          "run": "echo \\"::set-output name=value::custom\\""
+        }
+      ]
+    }
+  }
+}
+`;
