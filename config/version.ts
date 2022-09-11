@@ -183,7 +183,7 @@ async function updateMeta(props: ChangelogVersion) {
   for await (const entry of iterator) {
     const contents = await Deno.readTextFile(entry.absolute);
     const updated = contents.replace(
-      /export const VERSION\s*=\s*["'`]0.0.0["'`]/,
+      /export const VERSION\s*=\s*["'`]\d+.\d+.\d+["'`]/,
       `export const VERSION = "${props.version}"`,
     );
     await Deno.writeTextFile(entry.absolute, updated);

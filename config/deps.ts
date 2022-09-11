@@ -1,6 +1,3 @@
-export * as coreActions from "https://cdn.skypack.dev/@actions/core@1.9.0?dts";
-export * as githubActions from "https://cdn.skypack.dev/@actions/github@5.0.3?dts";
-export { default as gitUrlParse } from "https://cdn.skypack.dev/git-url-parse?dts";
 export {
   objectEntries,
   objectKeys,
@@ -18,3 +15,4 @@ export {
 } from "https://deno.land/x/rusty_markdown@v0.4.1/mod.ts";
 export * as semver from "https://deno.land/x/semver@v1.4.1/mod.ts";
 export { udd, type UddResult } from "https://deno.land/x/udd@0.7.5/mod.ts";
+export { default as gitUrlParse } from "https://esm.sh/git-url-parse@12.0.0";

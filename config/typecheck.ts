@@ -5,12 +5,17 @@ const files: string[] = [];
 const entries = globber({
   cwd,
   include: [
-    "deploy/**/*.{ts,tsx}",
-    "config/**/*.ts",
-    "tests/**/*test.ts",
+    "config/",
     "mod.ts",
+    "cli.ts",
+    "src/",
+    "tests/",
+    ".github/",
+    // TODO(@ifiokjr): enabling causes a type check error
+    // "deploy/",
   ],
-  exclude: ["**/fixtures", "**/snapshots"],
+  extensions: [".ts", ".tsx"],
+  exclude: ["**/fixtures", "**/snapshots", "config/twind.config.ts"],
   excludeDirectories: true,
 });
 

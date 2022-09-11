@@ -18,7 +18,6 @@ import type {
   HasActionTemplate,
   InputKeys,
   JobOutputKey,
-  LiteralString,
   SetPermissions,
   WithJob,
   WorkflowCallOptions,
@@ -137,6 +136,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
+   *   .on('push')
    *   .on('label', { types: ['created'] });
    * ```
    *
@@ -147,14 +147,15 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
-   *   .on('label', { types: ['opened', 'labeled] });
+   *   .on('push')
+   *   .on('pull_request', { types: ['opened', 'labeled'] });
    * ```
    *
    * For more information about each event and their activity types, see "Events that trigger workflows."
    */
   on<Options extends WorkflowDispatchOptions>(
     event: "workflow_dispatch",
-    options: Options,
+    options: WithContext<Options, Base>,
   ): Workflow<
     CombineAsUnion<
       | Base
@@ -164,7 +165,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
   >;
   on<Options extends WorkflowCallOptions>(
     event: "workflow_call",
-    options: Options,
+    options: WithContext<Options, Base>,
   ): Workflow<
     CombineAsUnion<
       | Base
@@ -220,6 +221,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
+   *   .on('push')
    *   .permissions('write-all') // => `read-all` for read access
    * ```
    *
@@ -264,6 +266,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
+   *   .on('push')
    *   .env({ SERVER: 'production' });
    * ```
    */
@@ -298,7 +301,8 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
-   *   .defaults({ shell: 'bash', 'working-directory': 'scripts' })
+   *   .on('push')
+   *   .defaults({ run: { shell: 'bash', 'working-directory': 'scripts' }})
    * ```
    */
   defaults(props: DefaultsProp) {
@@ -329,6 +333,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
+   *   .on('push')
    *   .concurrency(ctx => e.concat('ci-', ctx.github.ref)); // => `${{ join(['ci-', github.ref], '') }}`
    * ```
    *
@@ -339,6 +344,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
+   *   .on('push')
    *   .concurrency(ctx => ({
    *     group: e.expr(ctx.github.ref),
    *     'cancel-in-progress': true,
@@ -361,6 +367,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
+   *   .on('push')
    *   .concurrency(ctx => ({
    *     group: e.op(ctx.github.ref, '||', ctx.github.run_id),
    *     'cancel-in-progress': true,
@@ -382,6 +389,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
+   *   .on('push')
    *   .concurrency(ctx => ({
    *     group: e.op(ctx.github.ref, '||', ctx.github.run_id),
    *     'cancel-in-progress': true,
@@ -461,12 +469,3 @@ type GetJobs<Jobs extends Record<string, JobCreator<object, AnyJob>>> = {
 }[StringKeyOf<Jobs>];
 type ExtractJob<Type extends JobCreator<object, AnyJob>> = Type extends
   JobCreator<object, infer J> ? J : never;
-
-// const a = {
-//   a: Job.create(),
-//   b: Job.create().env({ A: "" }),
-//   c: (job: ReturnType<typeof Job.untyped>) => job.outputs({ YO: "", BRO: "" }),
-// } as const;
-// type A = GetJobs<typeof a>;
-// type C = GetJobOutputs<ExtractJob<typeof a.c>>;
-// type U = unknown extends true ? "woah" : "expected";

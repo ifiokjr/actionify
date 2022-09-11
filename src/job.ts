@@ -93,8 +93,8 @@ export class Job<
    *   .create({ name: "ci", fileName: "ci" })
    *   .job('a', (job) => job.name('A'))
    *   .job('b', (job) => job.name('B'))
-   *   .job('c', (job) => job.name('C').needs('a')).
-   *   .job('d', (job) => job.name('D').needs(["a", "b", "c"]))
+   *   .job('c', (job) => job.name('C').needs('a'))
+   *   .job('d', (job) => job.name('D').needs(["a", "b", "c"]));
    * ```
    */
   needs<Name extends NonNullable<Base["jobs"]>>(
@@ -181,11 +181,11 @@ export class Job<
    * `.strategy()`.
    *
    * ```ts
-   * import { Workflow, HostedRunner } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow, Runner } from 'https://deno.land/x/actionify/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
-   *   .job('setup', job => job.runsOn(HostedRunner.UbuntuLatest))
+   *   .job('setup', job => job.runsOn(Runner.UbuntuLatest))
    * ```
    *
    * ### Choosing self-hosted runners
@@ -206,7 +206,7 @@ export class Job<
    * not unintentionally specify any current or future GitHub-hosted runners.
    *
    * ```ts
-   * import { Workflow, HostedRunner } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow, Runner } from 'https://deno.land/x/actionify/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -260,14 +260,23 @@ export class Job<
    * ##### Using output as URL
    *
    * ```ts
-   * import { Workflow, e } from 'https://deno.land/x/actionify/mod.ts';
+   * import { commands, e, Workflow } from "https://deno.land/x/actionify/mod.ts";
    *
    * const workflow = Workflow
-   *   .create({ name: 'ci' })
-   *   .job('setup', job => job.environment((ctx) => ({
-   *      name: 'production',
-   *      url: e.expr(ctx.steps.step_id.outputs.url_output),
-   *    })));
+   *   .create({ name: "ci" })
+   *   .job("setup", (job) => {
+   *     return job
+   *       .step((step) => {
+   *         return step
+   *           .id("step_id")
+   *           .run(commands.setOutput("url_output", "value"));
+   *       })
+   *       .environment((ctx) => ({
+   *         name: "production",
+   *         url: e.expr(ctx.steps.step_id.outputs.url_output),
+   *       }));
+   *   });
+   *
    * ```
    */
   environment(environment: WithContext<EnvironmentOptions, Base>) {
@@ -298,7 +307,8 @@ export class Job<
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
-   *   .concurrency(ctx => e.concat('ci-', ctx.github.ref)); // => `${{ join(['ci-', github.ref], '') }}`
+   *   .on('push')
+   *   .concurrency(ctx => e.concat('ci-', ctx.github.ref));
    * ```
    *
    * ##### Using concurrency to cancel any in-progress job or run
@@ -308,6 +318,7 @@ export class Job<
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
+   *   .on('push')
    *   .concurrency(ctx => ({
    *     group: e.expr(ctx.github.ref),
    *     'cancel-in-progress': true,
@@ -330,6 +341,7 @@ export class Job<
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
+   *   .on('push')
    *   .concurrency(ctx => ({
    *     group: e.op(ctx.github.ref, '||', ctx.github.run_id),
    *     'cancel-in-progress': true,
@@ -351,6 +363,7 @@ export class Job<
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
+   *   .on('push')
    *   .concurrency(ctx => ({
    *     group: e.op(ctx.github.ref, '||', ctx.github.run_id),
    *     'cancel-in-progress': true,
@@ -412,11 +425,17 @@ export class Job<
    * ##### Set the default shell and working directory
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow } from "https://deno.land/x/actionify/mod.ts";
    *
    * const workflow = Workflow
-   *   .create({ name: 'ci' })
-   *   .job('job1', job => job.defaults({ shell: 'bash', 'working-directory': 'scripts' }));
+   *   .create({ name: "ci" })
+   *   .on("push")
+   *   .jobs({
+   *     "job1": (job) => {
+   *       return job
+   *         .defaults({ run: { shell: "bash", "working-directory": "scripts" } });
+   *     },
+   *   });
    * ```
    */
   defaults(defaults: DefaultsProp) {
@@ -488,19 +507,19 @@ export class Job<
    * with node set to 15 to fail without failing the workflow run.
    *
    * ```ts
-   * import { Workflow, e, HostedRunner } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow, e, Runner } from 'https://deno.land/x/actionify/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci', })
    *   .job('job', (job) => {
-   *     job
+   *     return job
    *       .strategy({
    *         'fail-fast': false,
    *         matrix: {
    *           node: [16, 18],
-   *           os: [HostedRunner.MacOSLatest, HostedRunner.UbuntuLatest],
+   *           os: [Runner.MacOSLatest, Runner.UbuntuLatest],
    *           experimental: [false],
-   *           include: [{ node: 17, os: HostedRunner.UbuntuLatest, experimental: true }],
+   *           include: [{ node: 17, os: Runner.UbuntuLatest, experimental: true }],
    *         },
    *       })
    *       .runsOn(ctx => e.expr(ctx.matrix.os))
@@ -662,10 +681,11 @@ export class Job<
    * workflow.
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify/mod.ts';
+   * import { e, Workflow } from 'https://deno.land/x/actionify/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
+   *   .on('push')
    *   .job('call-workflow', (job) => job
    *     .uses('octo-org/example-repo/.github/workflows/called-workflow.yml')
    *     .secrets((ctx) => ({
@@ -681,7 +701,7 @@ export class Job<
    * organization, or across organizations within the same enterprise.
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify/mod.ts';
+   * import { e, Runner, Workflow } from 'https://deno.land/x/actionify/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -695,7 +715,7 @@ export class Job<
    *   .create({ name: 'called-workflow' })
    *   .on('workflow_call')
    *   .job('pass-secret-to-action', job => job
-   *     .runsOn(HostedRunner.UbuntuLatest)
+   *     .runsOn(Runner.UbuntuLatest)
    *     .step(step => step
    *       .name('Use a repo or org secret from the calling workflow')
    *       .run(ctx => `echo ${e.expr(ctx.secrets.CALLING_WORKFLOW_SECRET)}`)

@@ -1,6 +1,10 @@
-import { commands, defineWorkflows, e } from "../../../mod.ts";
-import { Workflow } from "../../../mod.ts";
-import { HostedRunner } from "../../../types.ts";
+import {
+  commands,
+  defineWorkflows,
+  e,
+  Runner,
+  Workflow,
+} from "https://deno.land/x/actionify/mod.ts";
 
 const ciWorkflow = Workflow
   .create({ name: "ci", fileName: "ci" })
@@ -43,12 +47,12 @@ const ciWorkflow = Workflow
       .strategy({
         matrix: {
           os: [
-            HostedRunner.UbuntuLatest,
-            HostedRunner.MacOSLatest,
-            HostedRunner.WindowsLatest,
+            Runner.UbuntuLatest,
+            Runner.MacOSLatest,
+            Runner.WindowsLatest,
           ],
           node: [16, 17, 18],
-          exclude: [{ os: HostedRunner.UbuntuLatest, node: 16 }, { yo: true }],
+          exclude: [{ os: Runner.UbuntuLatest, node: 16 }, { yo: true }],
           include: [{ a: 100 }],
         },
       })
@@ -73,18 +77,3 @@ export default defineWorkflows({
   rootDirectory,
   workflows: [ciWorkflow],
 });
-
-// const w = Workflow
-//   .create({ name: "ci" })
-//   .on("workflow_dispatch", {
-//     inputs: { awesome: { type: "string", default: "asdf", require: true } },
-//   })
-//   .on("workflow_call", {
-//     secrets: { YO: {} },
-//     inputs: { yo: { type: "number" } },
-//   })
-//   .env((ctx) => {
-//     return {
-//       HELLO: e.expr(ctx.inputs.awesome),
-//     };
-//   });

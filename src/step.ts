@@ -91,7 +91,7 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
    * const conditionalStep = Step
    *   .create()
    *   .if(e.failure())
-   *   .uses('actions/heroku@1.0.0);
+   *   .uses('actions/heroku@1.0.0');
    *
    * const job = Job
    *   .create()
@@ -203,9 +203,9 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
    * same shell.
    *
    * ```ts
-   * import { Job } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Step } from 'https://deno.land/x/actionify/mod.ts';
    *
-   * const job = Job
+   * const step = Step
    *   .create()
    *   .run('npm install');
    * ```
@@ -228,12 +228,12 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
    * in the `run` keyword.
    *
    * ```ts
-   * import { Job } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Step } from 'https://deno.land/x/actionify/mod.ts';
    *
-   * const job = Job
+   * const step = Step
    *   .create()
-   *   .run('echo $PATH');
-   *   .shell('bash')
+   *   .run('echo $PATH')
+   *   .shell('bash');
    * ```
    */
   shell(shell: WithContext<LiteralString | `${Shell}`, Base>) {
@@ -246,11 +246,11 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
    * of where to run the command.
    *
    * ```ts
-   * import { Job } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Step } from 'https://deno.land/x/actionify/mod.ts';
    *
-   * const job = Job
+   * const step = Step
    *   .create()
-   *   .run('rm -rf *');
+   *   .run('rm -rf *')
    *   .workingDirectory('./tmp');
    * ```
    */

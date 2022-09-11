@@ -1,3 +1,4 @@
+import mainImportMap from "../import_map.json" assert { type: "json" };
 import { Meta } from "../mod.ts";
 import * as path from "../src/deps/path.ts";
 import { globber, semver } from "./deps.ts";
@@ -18,6 +19,11 @@ const releaseTypes = [
 
 try {
   const imports: Record<string, string> = {
+    ...Object.fromEntries(
+      Object.entries(mainImportMap.imports).filter(([_, path]) =>
+        !path.startsWith("./")
+      ),
+    ),
     "https://deno.land/x/actionify@<%=it.version%>/": cwd,
     "https://deno.land/x/actionify/": cwd,
     [`https://deno.land/x/actionify@${Meta.VERSION}/`]: cwd,
@@ -35,8 +41,9 @@ try {
   for await (
     const file of globber({
       cwd,
-      extensions: [".ts", ".md"],
-      exclude: ["**/fixtures/", "**/tests/", "**/config/"],
+      include: [".github/", "src/", "mod.ts", "readme.md"],
+      extensions: [".ts", ".md", ".tsx"],
+      dot: true,
       excludeDirectories: true,
     })
   ) {

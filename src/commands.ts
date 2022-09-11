@@ -194,7 +194,7 @@ export function setMask(value: ExpressionValue): Command<never> {
  * Sets an action's output parameter.
  *
  * ```ts
- * import { Step, commands } from 'https://deno.land/x/actionify/mod.ts';
+ * import { commands, e, Step } from 'https://deno.land/x/actionify/mod.ts';
  *
  * const step = Step
  *   .create()

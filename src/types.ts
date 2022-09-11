@@ -145,7 +145,7 @@ export interface ActionData<
    * Information about the steps that have been run in the current job. For more
    * information, see steps context.
    */
-  steps: Base["inJob"] extends true ? object : never;
+  steps: Base["inJob"] extends true ? StepsData<Base> : never;
 
   /**
    * Information about the runner that is running the current job. For more
@@ -1272,20 +1272,28 @@ export interface WorkflowOutput {
   description?: string;
   /**
    * ```ts
-   * import { Workflow, defineWorkflows, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import {
+   *   defineWorkflows,
+   *   e,
+   *   Workflow,
+   * } from "https://deno.land/x/actionify/mod.ts";
    *
    * const main = Workflow
-   *  .create({ name: 'ci' })
-   *  .on('workflow_call', (ctx) => ({
+   *   .create({ name: "ci" })
+   *   .job(
+   *     "main",
+   *     (job) => job.outputs({ duration: "100", benchmarkResults: "thumbs up" }),
+   *   )
+   *   .on("workflow_call", (ctx) => ({
    *     outputs: {
    *       first: { value: e.expr(ctx.jobs.main.outputs.duration) },
    *       second: { value: e.expr(ctx.jobs.main.outputs.benchmarkResults) },
-   *     }
+   *     },
    *   }));
    *
    * export default defineWorkflows({
-   *   workflows: [main]
-   * })
+   *   workflows: [main],
+   * });
    * ```
    */
   value: string | Expression;

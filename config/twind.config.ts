@@ -2,4 +2,4 @@
 
 /** @type {import('twind').Configuration} */
 
-export { default } from "../deploy/twind.config.ts";
+// export { default } from "../deploy/twind.config.ts";
