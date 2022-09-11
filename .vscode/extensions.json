@@ -1,4 +1,8 @@
 {
-  "recommendations": ["dprint.dprint", "denoland.vscode-deno"],
+  "recommendations": [
+    "dprint.dprint",
+    "denoland.vscode-deno",
+    "sastan.twind-intellisense"
+  ],
   "unwantedRecommendations": []
 }

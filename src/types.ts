@@ -11,10 +11,6 @@ import type {
   WithContext,
 } from "./expressions.ts";
 
-export type WithStep<Base extends ActionTemplate> = WithJob<Base> & {
-  inStep: true;
-};
-export type WithJob<Base extends ActionTemplate> = Base & { inJob: true };
 export type LiteralString = string & Record<never, never>;
 export type IsUnknown<Type> = unknown extends Type ? true : never;
 // gets all viable keys from all interfaces in a union.
@@ -53,7 +49,19 @@ export interface BaseContext<Type = unknown> {
   readonly z$__keys__$: string[];
 }
 
-export enum HostedRunner {
+/**
+ * Get the Action template from a workflow, step or job.
+ */
+export type GetTemplate<Type extends HasActionTemplate<any>> = Type["zBase$"];
+
+export interface HasActionTemplate<Base extends ActionTemplate> {
+  zBase$: Base;
+}
+
+export type WithStep<Type> = Type & { inStep: true; inJob: true };
+export type WithJob<Type> = Type & { inJob: true };
+
+export enum Runner {
   SelfHosted = "self-hosted",
   /**
    * The windows-latest label currently uses the Windows Server 2022 runner
@@ -173,8 +181,12 @@ export interface ActionData<
    * Contains the inputs of a reusable or manually triggered workflow. For more
    * information, see inputs context.
    */
-  inputs: object;
+  inputs: InputData<Base>;
 }
+
+type InputData<Base extends ActionTemplate> = {
+  [Input in NonNullable<Base["inputs"]>]: GetInput<Input, Base>;
+};
 
 export type StepOutputKey<StepId extends string, OutputName extends string> =
   GenerateKeyObject<
@@ -326,9 +338,9 @@ type JobMatrixKey<Name extends string, Type> = GenerateKeyObject<
   Type
 >;
 export type MatrixKeys<
-  Matrix extends Record<LiteralString, unknown[]>,
-  Excluded extends Record<string, unknown>,
-  Included extends Record<string, unknown>,
+  Matrix extends Record<LiteralString, readonly unknown[]>,
+  Excluded extends Record<LiteralString, unknown>,
+  Included extends Record<LiteralString, unknown>,
   MK extends StringKeyOf<Matrix> = Exclude<
     StringKeyOf<Matrix>,
     "exclude" | "include"
@@ -336,28 +348,41 @@ export type MatrixKeys<
   EK extends AllKeysOf<Excluded> = AllKeysOf<Excluded>,
   IK extends AllKeysOf<Included> = AllKeysOf<Included>,
 > =
-  | (EK extends string
-    ? { matrix: EK } & JobMatrixKey<EK, NonNullable<Excluded[EK]>>
+  | (LiteralString extends EK ? never
+    : EK extends string
+      ? { matrix: EK } & JobMatrixKey<EK, NonNullable<Excluded[EK]>>
     : never)
-  | (IK extends string
-    ? { matrix: IK } & JobMatrixKey<IK, NonNullable<Included[IK]>>
+  | (LiteralString extends IK ? never
+    : IK extends string
+      ? { matrix: IK } & JobMatrixKey<IK, NonNullable<Included[IK]>>
     : never)
-  | (MK extends string ? {
+  | (LiteralString extends MK ? never : MK extends string ? {
       matrix: MK;
     } & JobMatrixKey<MK, Matrix[MK] extends Array<infer T> ? T : never>
-    : never);
+  : never);
 
 type GetMatrix<Name extends string, Base extends ActionTemplate> = Base extends
-  JobMatrixKey<Name, infer Type> ? Type : LiteralString;
+  JobMatrixKey<Name, infer Type> ? Type : never;
 
 export type MatrixData<Base extends ActionTemplate> = {
   [Key in NonNullable<Base["matrix"]>]: GetMatrix<Key, Base>;
 };
 
+type A = {
+  events: "pull_request" | "push";
+  inJob: true;
+  env: "DENO_DIR";
+  matrix: "os" | "deno";
+  "job_matrix:os": Runner;
+  "job_matrix:deno": string;
+};
+
+type B = MatrixData<A>;
+
 export interface StrategyOptions<
-  Matrix extends Record<string, unknown[]> = Record<
+  Matrix extends Record<string, readonly unknown[]> = Record<
     string,
-    unknown[]
+    readonly unknown[]
   >,
   Exclude extends Record<string, unknown> = Record<
     string,
@@ -369,8 +394,8 @@ export interface StrategyOptions<
   >,
 > {
   matrix?: Matrix & {
-    exclude?: Exclude[];
-    include?: Included[];
+    exclude?: readonly Exclude[];
+    include?: readonly Included[];
   };
 
   /**
@@ -1131,7 +1156,7 @@ export interface WorkflowEventOptions {
   status: WithTypes<"status">;
   watch: WithTypes<"watch">;
   workflow_call: WorkflowCallOptions;
-  workflow_dispatch: WithTypes<"workflow_dispatch">;
+  workflow_dispatch: WorkflowDispatchOptions;
   workflow_run: WorkflowRunOptions;
 }
 
@@ -1177,18 +1202,46 @@ export interface PushOptions {
    */
   paths?: readonly string[];
 }
-interface WorkflowCallOptions {
+export interface WorkflowCallOptions {
   inputs?: Record<string, WorkflowCallInput> | undefined;
-  outputs?: Record<string, Output> | undefined;
+  outputs?: Record<string, WorkflowOutput> | undefined;
   secrets?: Record<string, Secret> | undefined;
 }
+
+type InputKey<Name extends string, Type> = GenerateKeyObject<
+  "input",
+  Name,
+  Type
+>;
+export type InputKeys<
+  Input extends Record<string, WorkflowDispatchInput>,
+  Key extends StringKeyOf<Input> = StringKeyOf<Input>,
+> = Key extends string
+  ? { inputs: Key } & InputKey<Key, GetInputType<Input[Key]>>
+  : never;
+
+type GetInputType<Type extends WorkflowDispatchInput> = Type extends
+  StringInput | ChoiceInput | EnvironmentInput ? string
+  : Type extends BooleanInput ? boolean
+  : Type extends NumberInput ? number
+  : never;
+type GetInput<Name extends string, Base extends ActionTemplate> = Base extends
+  InputKey<Name, infer Type> ? Type : LiteralString;
+
+export interface WorkflowDispatchOptions {
+  inputs?: Record<string, WorkflowDispatchInput> | undefined;
+}
+
 export interface WorkflowRunOptions
   extends WithTypes<"workflow_run">, PushOptions {
   workflows: Array<string | { name: string }>;
 }
 
 export type WorkflowCallInput = StringInput | BooleanInput | NumberInput;
-export type Input = WorkflowCallInput | ChoiceInput | EnvironmentInput;
+export type WorkflowDispatchInput =
+  | WorkflowCallInput
+  | ChoiceInput
+  | EnvironmentInput;
 interface BaseInput {
   require?: boolean | undefined;
   description?: string | undefined;
@@ -1215,7 +1268,7 @@ interface ChoiceInput extends BaseInput {
   default?: string | undefined;
 }
 
-export interface Output {
+export interface WorkflowOutput {
   description?: string;
   /**
    * ```ts

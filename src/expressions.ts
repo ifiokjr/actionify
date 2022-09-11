@@ -67,7 +67,7 @@ export function contains(
   item: ExpressionContent,
 ) {
   return Expression
-    .create("contains(", search, item)
+    .create("contains(", str(search), str(item), ")")
     .cast<boolean>();
 }
 
@@ -76,7 +76,7 @@ export function contains(
  */
 export function not(content: ExpressionContent) {
   return Expression
-    .create("!", content)
+    .create("!", str(content))
     .cast<boolean>();
 }
 
@@ -128,7 +128,63 @@ export function op(
   operator: `${Operator}`,
   rhs: ExpressionContent,
 ): Expression {
-  return Expression.create(lhs, " ", operator, " ", rhs);
+  return Expression.create(str(lhs), " ", operator, " ", str(rhs));
+}
+
+export function and<Lhs, Rhs>(
+  lhs: ExpressionContent<Lhs>,
+  rhs: ExpressionContent<Rhs>,
+) {
+  return op(lhs, Operator.And, rhs);
+}
+
+export function or<Lhs, Rhs>(
+  lhs: ExpressionContent<Lhs>,
+  rhs: ExpressionContent<Rhs>,
+) {
+  return op(lhs, Operator.Or, rhs);
+}
+
+export function eq<Type extends SupportedPrimitives>(
+  lhs: ExpressionContent<Type>,
+  rhs: ExpressionContent<Type>,
+) {
+  return op(lhs, Operator.Equal, rhs);
+}
+
+export function lt<Type extends SupportedPrimitives>(
+  lhs: ExpressionContent<Type>,
+  rhs: ExpressionContent<Type>,
+) {
+  return op(lhs, Operator.LessThan, rhs);
+}
+
+export function lte<Type extends SupportedPrimitives>(
+  lhs: ExpressionContent<Type>,
+  rhs: ExpressionContent<Type>,
+) {
+  return op(lhs, Operator.LessThanOrEqual, rhs);
+}
+
+export function gt<Type extends SupportedPrimitives>(
+  lhs: ExpressionContent<Type>,
+  rhs: ExpressionContent<Type>,
+) {
+  return op(lhs, Operator.GreaterThan, rhs);
+}
+
+export function gte<Type extends SupportedPrimitives>(
+  lhs: ExpressionContent<Type>,
+  rhs: ExpressionContent<Type>,
+) {
+  return op(lhs, Operator.GreaterThanOrEqual, rhs);
+}
+
+export function notEq<Type extends SupportedPrimitives>(
+  lhs: ExpressionContent<Type>,
+  rhs: ExpressionContent<Type>,
+) {
+  return op(lhs, Operator.NotEqual, rhs);
 }
 
 /**
@@ -140,7 +196,7 @@ export function startsWith(
   searchValue: ExpressionContent<string>,
 ) {
   return Expression
-    .create("startsWith(", searchString, ", ", searchValue, ")")
+    .create("startsWith(", str(searchString), ", ", str(searchValue), ")")
     .cast<boolean>();
 }
 
@@ -153,7 +209,7 @@ export function endsWith(
   searchValue: ExpressionContent<string>,
 ) {
   return Expression
-    .create("endsWith(", searchString, ", ", searchValue, ")")
+    .create("endsWith(", str(searchString), ", ", str(searchValue), ")")
     .cast<boolean>();
 }
 
@@ -169,11 +225,11 @@ export function format(
   ...replacements: Array<ExpressionContent<string>>
 ) {
   const expression = Expression
-    .create("format(", stringToFormat);
+    .create("format(", str(stringToFormat));
 
   if (replacements.length > 0) {
     for (const replacement of replacements) {
-      expression.add(", ", replacement);
+      expression.add(", ", str(replacement));
     }
   }
 
@@ -192,45 +248,45 @@ export function join(
   array: ExpressionContent<string | string[]>,
   optionalSeparator?: ExpressionContent<string>,
 ) {
-  const expression = Expression.create("join(", array);
+  const expression = Expression.create("join(", str(array));
 
   if (optionalSeparator) {
-    expression.add(", ", optionalSeparator);
+    expression.add(", ", str(optionalSeparator));
   }
 
   return expression.add(")").cast<string>();
 }
 
 export function concat(
-  first: ExpressionContent<string>,
-  second: ExpressionContent<string>,
-  ...rest: Array<ExpressionContent<string>>
+  first: ExpressionContent,
+  second: ExpressionContent,
+  ...rest: Array<ExpressionContent>
 ) {
-  const expression = Expression.create("join([", first, ", ", second);
+  const expression = Expression.create("join([", str(first), ", ", str(second));
 
   if (rest.length > 0) {
     for (const item of rest) {
-      expression.add(", ", item);
+      expression.add(", ", str(item));
     }
   }
 
-  return expression.add("], '')");
+  return expression.add("], '')").cast<string>();
 }
 
 export function toJSON(value: ExpressionContent) {
-  return Expression.create("toJSON(", value, ")").cast<string>();
+  return Expression.create("toJSON(", str(value), ")").cast<string>();
 }
 
 export function fromJSON(value: ExpressionContent<string>) {
-  return Expression.create("fromJSON(", value, ")");
+  return Expression.create("fromJSON(", str(value), ")");
 }
 
 export function hashFiles(...patterns: [string, ...string[]]) {
   const [path, ...rest] = patterns;
-  const expression = Expression.create("hashFiles(", path);
+  const expression = Expression.create("hashFiles(", str(path));
 
   for (const pattern of rest) {
-    expression.add(", ", pattern);
+    expression.add(", ", str(pattern));
   }
 
   return expression.add(")").cast<string>();
@@ -271,7 +327,7 @@ export function failure() {
 export function expr<Type = unknown>(
   content: ExpressionContent<Type> | undefined,
 ) {
-  return Expression.create(content);
+  return Expression.create(str(content));
 }
 
 export function context<
@@ -308,7 +364,7 @@ type ExtractPrimitive<Type> = Type extends Array<infer T>
   : Extract<Type, SupportedPrimitives>;
 // type BaseType<Type = unknown> = true extends IsUnknown<Type> ? number | null | string | boolean :
 export type ExpressionContent<
-  Type = unknown,
+  Type = SupportedPrimitives,
 > =
   | ExpressionValue<Type>
   | BaseContext<Type>;
@@ -335,4 +391,8 @@ function mapContentToString<Type = unknown>(
   }
 
   return content.toString();
+}
+
+function str<Type>(value: Type): string | Type {
+  return typeof value === "string" ? `'${value.replaceAll("'", "''")}'` : value;
 }

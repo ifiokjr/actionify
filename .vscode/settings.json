@@ -1,5 +1,6 @@
 {
-  "deno.enablePaths": ["deploy", "actionify", "scripts"],
+  "deno.enable": true,
+  "deno.lint": true,
   "[markdown]": {
     "editor.defaultFormatter": "dprint.dprint"
   },

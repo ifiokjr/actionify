@@ -1,10 +1,9 @@
 import { globber, udd, type UddResult } from "./deps.ts";
-
-const cwd = new URL("..", import.meta.url);
+import { cwd } from "./helpers.ts";
 
 const entries = globber({
   cwd,
-  include: ["**/deps.ts", "**/deps/*.ts", "**/import_map.json"],
+  include: ["**/deps.ts", "**/deps/*.ts"],
   exclude: ["**/fixtures", "**/snapshots"],
   excludeDirectories: true,
 });

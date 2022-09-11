@@ -1,15 +1,23 @@
 import { isFunction } from "./deps/just.ts";
 import { StringKeyOf } from "./deps/types.ts";
-import { ExpressionValue, WithContext } from "./expressions.ts";
+import {
+  context,
+  Contextify,
+  ExpressionValue,
+  WithContext,
+} from "./expressions.ts";
 import { AnyStep, Step } from "./step.ts";
 import type {
+  ActionData,
   ActionTemplate,
   CombineAsUnion,
   DefaultsProp,
   EnvProps,
-  HostedRunner,
+  GetTemplate,
+  HasActionTemplate,
   LiteralString,
   MatrixKeys,
+  Runner,
   SetPermissions,
   StepOutput,
   StrategyOptions,
@@ -20,9 +28,9 @@ import { getFromContext } from "./utils.ts";
 
 export class Job<
   Base extends ActionTemplate = WithJob<ActionTemplate>,
-> {
-  static create<Base extends ActionTemplate = WithJob<{}>>(): Job<Base> {
-    return new Job<Base>();
+> implements HasActionTemplate<Base> {
+  static create<Base extends ActionTemplate = {}>(): Job<WithJob<Base>> {
+    return new Job();
   }
 
   /**
@@ -32,10 +40,10 @@ export class Job<
     return new Job();
   }
 
-  declare z$: Base;
+  declare zBase$: Base;
   #name?: ExpressionValue<string> | undefined;
   #permissions: SetPermissions | undefined;
-  #needs: string | undefined;
+  #needs: string | string[] | undefined;
   #if: ExpressionValue | undefined;
   #runsOn: ExpressionValue<string | string[]> | undefined;
   #environment: EnvironmentOptions | undefined;
@@ -83,14 +91,14 @@ export class Job<
    *
    * const workflow = Workflow
    *   .create({ name: "ci", fileName: "ci" })
-   *   .job('a', (ctx) => ctx.name('A'))
-   *   .job('b', (ctx) => ctx.name('B'))
-   *   .job('c', (ctx) => ctx.name('C').needs('a')).
-   *   .job('d', (ctx) => ctx.name('D').needs(["a", "b", "c"]))
+   *   .job('a', (job) => job.name('A'))
+   *   .job('b', (job) => job.name('B'))
+   *   .job('c', (job) => job.name('C').needs('a')).
+   *   .job('d', (job) => job.name('D').needs(["a", "b", "c"]))
    * ```
    */
   needs<Name extends NonNullable<Base["jobs"]>>(
-    needs: WithContext<Name>,
+    needs: WithContext<Name | Name[], Base>,
   ): Job<CombineAsUnion<Base | { needs: Name }>> {
     this.#needs = getFromContext(needs);
     return this as any;
@@ -126,7 +134,7 @@ export class Job<
    * ```
    */
   outputs<Options extends DefaultOutputOptions>(
-    outputs: WithContext<Options>,
+    outputs: WithContext<Options, Base>,
   ): Job<CombineAsUnion<Base | { jobOutputs: StringKeyOf<Options> }>> {
     this.#outputs = getFromContext(outputs);
     return this as any;
@@ -158,7 +166,7 @@ export class Job<
    *   });
    * ```
    */
-  if(statement: WithContext<ExpressionValue>) {
+  if(statement: WithContext<ExpressionValue, Base>) {
     this.#if = getFromContext(statement);
     return this;
   }
@@ -206,7 +214,7 @@ export class Job<
    * ```
    */
   runsOn(
-    runsOn: WithContext<RunsOnOptions>,
+    runsOn: WithContext<RunsOnOptions, Base>,
   ) {
     this.#runsOn = getFromContext(runsOn);
     return this;
@@ -262,7 +270,7 @@ export class Job<
    *    })));
    * ```
    */
-  environment(environment: WithContext<EnvironmentOptions>) {
+  environment(environment: WithContext<EnvironmentOptions, Base>) {
     this.#environment = getFromContext(environment);
     return this;
   }
@@ -349,7 +357,7 @@ export class Job<
    *   }));
    * ```
    */
-  concurrency(options: WithContext<ConcurrentOptions>) {
+  concurrency(options: WithContext<ConcurrentOptions, Base>) {
     this.#concurrency = getFromContext(options);
     return this;
   }
@@ -440,11 +448,11 @@ export class Job<
    * information, see "Using a matrix for your jobs."
    */
   strategy<
-    Matrix extends Record<LiteralString, unknown[]>,
+    Matrix extends Record<LiteralString, readonly unknown[]>,
     Excluded extends Record<LiteralString, unknown>,
     Included extends Record<LiteralString, unknown>,
   >(
-    strategy: WithContext<StrategyOptions<Matrix, Excluded, Included>>,
+    strategy: WithContext<StrategyOptions<Matrix, Excluded, Included>, Base>,
   ): Job<
     CombineAsUnion<
       Base | MatrixKeys<Matrix, Excluded, Included>
@@ -500,7 +508,7 @@ export class Job<
    *   })
    * ```
    */
-  continueOnError(continueOnError: WithContext<ExpressionValue>) {
+  continueOnError(continueOnError: WithContext<ExpressionValue, Base>) {
     this.#continueOnError = getFromContext(continueOnError);
     return this;
   }
@@ -535,7 +543,7 @@ export class Job<
    * :::
    */
   container<Env extends EnvProps>(
-    container: WithContext<ContainerOptions<Env>>,
+    container: WithContext<ContainerOptions<Env>, Base>,
   ): Job<CombineAsUnion<Base | { env: StringKeyOf<Env> }>> {
     this.#container = getFromContext(container);
     return this as any;
@@ -574,7 +582,7 @@ export class Job<
    * containers, see "About service containers."
    */
   services<Services extends string>(
-    services: WithContext<Record<Services, ContainerProps>>,
+    services: WithContext<Record<Services, ContainerProps>, Base>,
   ): Job<CombineAsUnion<Base | { services: Services }>> {
     this.#services = getFromContext(services);
     return this as any;
@@ -641,7 +649,7 @@ export class Job<
    *   );
    * ```
    */
-  with(props: WithContext<Record<string, ExpressionValue>>) {
+  with(props: WithContext<Record<string, ExpressionValue>, Base>) {
     this.#with = getFromContext(props);
     return this;
   }
@@ -695,7 +703,7 @@ export class Job<
    *   );
    * ```
    */
-  secrets(secrets: WithContext<SecretsInput>) {
+  secrets(secrets: WithContext<SecretsInput, Base>) {
     this.#secrets = getFromContext(secrets);
     return this;
   }
@@ -716,8 +724,21 @@ export class Job<
   >(
     step: StepCreator<Base, OutputStep>,
   ): Job<CombineAsUnion<Base | StepOutput<Id, GetStepOutputs<OutputStep>>>> {
-    const result = isFunction(step) ? step(Step.create()) : step;
+    const result = isFunction(step) ? step(Step.create(), context()) : step;
     this.#steps.push(result);
+    return this as any;
+  }
+
+  /**
+   * Create multiple steps.
+   */
+  steps<Steps extends ReadonlyArray<StepCreator<Base, AnyStep>>>(
+    steps: Steps,
+  ): Job<CombineAsUnion<Base | GetSteps<Base, Steps>>> {
+    const results = steps.map((step) =>
+      isFunction(step) ? step(Step.create(), context()) : step
+    );
+    this.#steps.push(...results);
     return this as any;
   }
 
@@ -771,7 +792,7 @@ interface ConcurrentProps {
 }
 
 type RunsOnOptions = ExpressionValue<
-  `${HostedRunner}` | LiteralString | string[]
+  `${Runner}` | LiteralString | string[]
 >;
 
 interface ContainerProps<Env extends EnvProps = EnvProps> {
@@ -835,11 +856,30 @@ type SecretsInput =
   | Record<string, ExpressionValue>;
 
 type StepCreator<Base extends ActionTemplate, OutputStep extends AnyStep> =
-  | ((step: Step<WithStep<Base>>) => OutputStep)
+  | ((
+    step: Step<WithStep<Base>>,
+    ctx: Contextify<ActionData<Base>>,
+  ) => OutputStep)
   | OutputStep;
+type StepsCreator<Base extends ActionTemplate, OutputStep extends AnyStep> =
+  | ((
+    step: Step<WithStep<Base>>,
+    ctx: Contextify<ActionData<Base>>,
+  ) => OutputStep[])
+  | OutputStep[];
 type GetStepId<Type extends AnyStep> = Type extends
-  Step<infer Base extends ActionTemplate> ? Base["stepId"] : never;
+  Step<infer Base extends ActionTemplate> ? Base["stepId"]
+  : never;
 
-type GetStepOutputs<Type extends AnyStep> = Type extends Step<infer Base>
-  ? Base["stepOutputs"]
-  : string;
+type GetStepOutputs<Type extends AnyStep> = unknown extends
+  GetTemplate<Type>["stepOutputs"] ? never
+  : GetTemplate<Type>["stepOutputs"];
+
+type GetSteps<
+  Base extends ActionTemplate,
+  Steps extends ReadonlyArray<StepCreator<Base, AnyStep>>,
+> // Id extends GetStepId<OutputStep> = GetStepId<OutputStep>,
+ = Steps extends Array<StepCreator<Base, infer S>>
+  ? S extends AnyStep ? StepOutput<GetStepId<S>, GetStepOutputs<S>>
+  : never
+  : never;

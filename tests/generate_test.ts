@@ -1,5 +1,5 @@
-import { join } from "../deps/path.ts";
 import { generate } from "../mod.ts";
+import { join } from "../src/deps/path.ts";
 import { describe, it } from "./deps.ts";
 import { snapshot } from "./helpers.ts";
 

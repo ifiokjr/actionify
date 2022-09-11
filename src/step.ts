@@ -6,17 +6,26 @@ import type {
   ActionTemplate,
   CombineAsUnion,
   EnvProps,
+  HasActionTemplate,
   LiteralString,
   Shell,
   WithStep,
 } from "./types.ts";
 import { getFromContext } from "./utils.ts";
 
-export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>> {
+export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
+  implements HasActionTemplate<Base> {
   static create<
-    Base extends ActionTemplate = WithStep<{ stepId: never }>,
-  >(): Step<Base> {
-    return new Step<Base>();
+    Base extends ActionTemplate = { stepId: never },
+  >(): Step<WithStep<Base>> {
+    return new Step();
+  }
+
+  /**
+   * Create a leniently typed `Step`.
+   */
+  static untyped() {
+    return new Step();
   }
 
   #id: string | undefined;
@@ -30,7 +39,7 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>> {
   #env: Record<string, ExpressionValue<string>> | undefined;
   #continueOnError: ExpressionValue | undefined;
   #timeoutMinutes: ExpressionValue<number> | undefined;
-  declare z$: Base;
+  declare zBase$: Base;
 
   /**
    * A unique identifier for the step. You can use the id to reference the step
@@ -120,7 +129,7 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>> {
    *   );
    * ```
    */
-  if(statement: WithContext<ExpressionValue>) {
+  if(statement: WithContext<ExpressionValue, Base>) {
     this.#if = getFromContext(statement);
     return this;
   }
@@ -128,7 +137,7 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>> {
   /**
    * A name for the step to display in the GitHub UI.
    */
-  name(name: WithContext<ExpressionValue<string>>) {
+  name(name: WithContext<ExpressionValue<string>, Base>) {
     this.#name = getFromContext(name);
     return this;
   }
@@ -202,7 +211,7 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>> {
    * ```
    */
   run<Type extends AnyCommand | string>(
-    run: WithContext<Type | Type[]>,
+    run: WithContext<Type | Type[], Base>,
   ): Step<CombineAsUnion<Base | { stepOutputs: ExtractOutputs<Type> }>> {
     const value = getFromContext(run);
     this.#run = (isArray(value) ? value : [value])
@@ -227,7 +236,7 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>> {
    *   .shell('bash')
    * ```
    */
-  shell(shell: WithContext<LiteralString | `${Shell}`>) {
+  shell(shell: WithContext<LiteralString | `${Shell}`, Base>) {
     this.#shell = getFromContext(shell);
     return this;
   }
@@ -245,7 +254,7 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>> {
    *   .workingDirectory('./tmp');
    * ```
    */
-  workingDirectory(workingDirectory?: WithContext<ExpressionValue>) {
+  workingDirectory(workingDirectory?: WithContext<ExpressionValue, Base>) {
     this.#workingDirectory = getFromContext(workingDirectory);
     return this;
   }
@@ -255,7 +264,7 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>> {
    * is a key/value pair. Input parameters are set as environment variables. The
    * variable is prefixed with INPUT_ and converted to upper case.
    */
-  with(props: WithContext<WithProps>) {
+  with(props: WithContext<WithProps, Base>) {
     this.#with = getFromContext(props);
     return this;
   }
@@ -288,7 +297,7 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>> {
    * Prevents a job from failing when a step fails. Set to true to allow a job
    * to pass when this step fails.
    */
-  continueOnError(continueOnError: WithContext<ExpressionValue>) {
+  continueOnError(continueOnError: WithContext<ExpressionValue, Base>) {
     this.#continueOnError = getFromContext(continueOnError);
     return this;
   }
@@ -296,7 +305,7 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>> {
   /**
    * The maximum number of minutes to run the step before killing the process.
    */
-  timeoutMinutes(minutes: WithContext<ExpressionValue<number>>) {
+  timeoutMinutes(minutes: WithContext<ExpressionValue<number>, Base>) {
     this.#timeoutMinutes = getFromContext(minutes);
     return this;
   }
@@ -309,6 +318,9 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>> {
     return this.toString();
   }
 
+  /**
+   * TODO(@ifiokjr): add type to the json result
+   */
   toJSON() {
     const json = Object.create(null);
 

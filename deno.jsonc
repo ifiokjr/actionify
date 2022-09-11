@@ -1,24 +1,34 @@
 {
   "tasks": {
-    "start": "deno run -A --watch=static/,routes/ dev.ts",
-    "check": "deno task typecheck && deno task fix && deno task lint && deno task test && deno task test:docs && CI=true deno task lock",
-    "fix": "dprint fmt",
-    "lint": "deno lint",
-    "lock:update": "deno run --allow-run=deno --allow-read scripts/cache.ts",
-    "lock": "deno run --allow-run=deno --allow-env=CI --allow-read scripts/cache.ts --reload",
+    "check": "deno task fix && deno task lint && deno task test && deno task test:docs && deno task typecheck && CI=true deno task lock",
+    "fix:format": "dprint fmt",
+    "fix": "deno task fix:format",
+    "lint:format": "dprint check",
+    "lint:ts": "deno lint",
+    "lint": "deno task lint:ts && deno task lint:format",
+    "lock:update": "deno run --allow-run=deno --allow-read config/cache.ts",
+    "lock": "deno run --allow-run=deno --allow-env=CI --allow-read config/cache.ts --reload",
+    "publish": "deno run -A config/publish.ts",
+    "start": "deno run -A --watch=src/,deploy/static/,deploy/routes/ deploy/dev.ts",
     "test:coverage": "deno test --coverage=coverage --unstable -A",
-    "test:docs": "deno test --docs -A mod.ts readme.md",
+    "test:docs": "deno run -A ./config/test_docs.ts",
     "test:snapshot": "deno test --unstable -A -- -u",
     "test:watch": "deno test --unstable -A --watch",
     "test": "deno test --unstable -A",
-    "typecheck": "deno --unstable check ./mod.ts",
-    "update": "dprint config update && deno run -A 'https://deno.land/x/udd@0.7.4/main.ts' src/deps.ts scripts/deps.ts tests/deps.ts"
+    "typecheck": "deno run --unstable -A config/typecheck.ts",
+    "update:deps": "deno run --allow-net --allow-read --allow-write config/update.ts",
+    "update:dprint": "dprint config update",
+    "update": "deno task update:dprint && deno task update:deps",
+    "version": "deno run -A ./config/version.ts"
   },
   "compilerOptions": {
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
-    "noImplicitOverride": true
+    "noImplicitOverride": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
   },
+  "importMap": "./import_map.json",
   "lint": {
     "files": {
       "include": ["./"],

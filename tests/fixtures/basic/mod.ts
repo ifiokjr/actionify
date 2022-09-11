@@ -68,8 +68,23 @@ const ciWorkflow = Workflow
   .env((ctx) => ({ YO: e.expr(ctx.github.workspace) }));
 
 const rootDirectory = import.meta.resolve("./tmp/workflows");
-console.log({ rootDirectory });
+
 export default defineWorkflows({
   rootDirectory,
   workflows: [ciWorkflow],
 });
+
+// const w = Workflow
+//   .create({ name: "ci" })
+//   .on("workflow_dispatch", {
+//     inputs: { awesome: { type: "string", default: "asdf", require: true } },
+//   })
+//   .on("workflow_call", {
+//     secrets: { YO: {} },
+//     inputs: { yo: { type: "number" } },
+//   })
+//   .env((ctx) => {
+//     return {
+//       HELLO: e.expr(ctx.inputs.awesome),
+//     };
+//   });

@@ -1,16 +1,28 @@
 import { isEmpty, isFunction, kebabCase } from "./deps/just.ts";
 import type { StringKeyOf } from "./deps/types.ts";
-import type { ExpressionValue, WithContext } from "./expressions.ts";
+import {
+  context,
+  Contextify,
+  ExpressionValue,
+  WithContext,
+} from "./expressions.ts";
 import { AnyJob, ConcurrentOptions, Job } from "./job.ts";
 import type {
+  ActionData,
   ActionTemplate,
   CombineAsUnion,
   DefaultsProp,
   EnvProps,
   GetEventOptions,
+  GetTemplate,
+  HasActionTemplate,
+  InputKeys,
   JobOutputKey,
+  LiteralString,
   SetPermissions,
   WithJob,
+  WorkflowCallOptions,
+  WorkflowDispatchOptions,
   WorkflowEvents,
   WorkflowRunOptions,
 } from "./types.ts";
@@ -29,7 +41,8 @@ interface CreateWorkflowProps {
  * A workflow is a configurable automated process made up of one or more jobs.
  * This class creates a YAML file to define your workflow configuration.
  */
-export class Workflow<Base extends ActionTemplate = ActionTemplate> {
+export class Workflow<Base extends ActionTemplate = ActionTemplate>
+  implements HasActionTemplate<Base> {
   /**
    * Check if provided value is a workflow instance.
    */
@@ -53,7 +66,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate> {
     return new this<Base>(props);
   }
 
-  declare z$: Base;
+  declare zBase$: Base;
   readonly name: string;
   readonly fileName: string;
 
@@ -139,10 +152,36 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate> {
    *
    * For more information about each event and their activity types, see "Events that trigger workflows."
    */
-  on<Event extends keyof WorkflowEvents>(
+  on<Options extends WorkflowDispatchOptions>(
+    event: "workflow_dispatch",
+    options: Options,
+  ): Workflow<
+    CombineAsUnion<
+      | Base
+      | { events: "workflow_dispatch" }
+      | InputKeys<NonNullable<Options["inputs"]>>
+    >
+  >;
+  on<Options extends WorkflowCallOptions>(
+    event: "workflow_call",
+    options: Options,
+  ): Workflow<
+    CombineAsUnion<
+      | Base
+      | { events: "workflow_call"; secrets: StringKeyOf<Options["secrets"]> }
+      | InputKeys<NonNullable<Options["inputs"]>>
+    >
+  >;
+  on<
+    Event extends keyof Exclude<
+      WorkflowEvents,
+      "workflow_dispatch" | "workflow_call"
+    >,
+  >(
     event: Event,
     ...[options]: GetEventOptions<Event, Base | { events: Event }>
-  ): Workflow<CombineAsUnion<Base | { events: Event }>> {
+  ): Workflow<CombineAsUnion<Base | { events: Event }>>;
+  on(event: string, options: object | undefined) {
     const optionsObject = getFromContext(options);
     if (event === "workflow_run") {
       const opts = optionsObject as WorkflowRunOptions;
@@ -349,7 +388,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate> {
    *   }));
    * ```
    */
-  concurrency(options: WithContext<ConcurrentOptions>) {
+  concurrency(options: WithContext<ConcurrentOptions, Base>) {
     this.#concurrency = getFromContext(options);
     return this;
   }
@@ -365,7 +404,23 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate> {
       Base | { jobs: Id } | JobOutputKey<Id, GetJobOutputs<OutputJob>>
     >
   > {
-    this.#jobs[id] = isFunction(job) ? job(Job.create()) : job;
+    this.#jobs[id] = isFunction(job) ? job(Job.create(), context()) : job;
+    return this as any;
+  }
+
+  /**
+   * Create multiple jobs as an object.
+   *
+   * The order of keys will be the order they jobs are displayed in the
+   * generated action file.
+   */
+  jobs<Jobs extends Record<string, JobCreator<object, AnyJob>>>(
+    jobs: Jobs,
+  ): Workflow<CombineAsUnion<Base | GetJobs<Jobs>>> {
+    for (const [id, job] of Object.entries(jobs)) {
+      this.#jobs[id] = isFunction(job) ? job(Job.create(), context()) : job;
+    }
+
     return this as any;
   }
 
@@ -391,10 +446,27 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate> {
 }
 
 type JobCreator<Base extends ActionTemplate, OutputJob extends AnyJob> =
-  | ((job: Job<WithJob<Base>>) => OutputJob)
+  | ((job: Job<WithJob<Base>>, ctx: Contextify<ActionData<Base>>) => OutputJob)
   | OutputJob;
-type GetJobOutputs<Type extends AnyJob> = Type extends Job<infer Base>
-  ? Base["jobOutputs"]
-  : string;
+type GetJobOutputs<Type extends AnyJob> = unknown extends
+  GetTemplate<Type>["jobOutputs"] ? never
+  : GetTemplate<Type>["jobOutputs"];
 
 export type AnyWorkflow = Workflow<any>;
+
+type GetJobs<Jobs extends Record<string, JobCreator<object, AnyJob>>> = {
+  [Id in StringKeyOf<Jobs>]:
+    | { jobs: Id }
+    | JobOutputKey<Id, GetJobOutputs<ExtractJob<Jobs[Id]>>>;
+}[StringKeyOf<Jobs>];
+type ExtractJob<Type extends JobCreator<object, AnyJob>> = Type extends
+  JobCreator<object, infer J> ? J : never;
+
+// const a = {
+//   a: Job.create(),
+//   b: Job.create().env({ A: "" }),
+//   c: (job: ReturnType<typeof Job.untyped>) => job.outputs({ YO: "", BRO: "" }),
+// } as const;
+// type A = GetJobs<typeof a>;
+// type C = GetJobOutputs<ExtractJob<typeof a.c>>;
+// type U = unknown extends true ? "woah" : "expected";
