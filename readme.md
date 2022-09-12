@@ -193,14 +193,17 @@ const ci = workflow({ name: "ci" })
   .job(
     "Explore-GitHub-Actions",
     job()
-      .step((_, ctx) =>
-        actionsCheckout({
+      .step((_, ctx) => {
+        return actionsCheckout({
           repository: e.wrap(ctx.github.repository),
           ref: e.wrap(ctx.github.ref),
           token: e.wrap(ctx.github.token),
           lfs: true,
-        }, { GITHUB_TOKEN: e.wrap(ctx.secrets.GITHUB_TOKEN) })
-      ),
+        })
+          .env({
+            GITHUB_TOKEN: e.wrap(ctx.secrets.GITHUB_TOKEN),
+          });
+      }),
   );
 
 export default defineWorkflows({
@@ -209,6 +212,24 @@ export default defineWorkflows({
 ```
 
 The remote actions will be dynamically generated and cached.
+
+### Support deno scripting
+
+A user should be able to run write a function that runs directly within the function context. The script created would use deno as the runtime.
+
+```ts
+import { step } from "https://deno.land/x/actionify@0.0.0/mod.ts";
+
+const scriptStep = step()
+  // @ts-expect-error
+  .script(async function (...args: number[]) {
+    // This runs the script in the context of the step and has access to the deno runtime.
+    const result = await Deno.readTextFile(
+      new URL(import.meta.resolve("./readme.md")),
+    );
+    // do something with the result
+  }, [1, 2, 3]);
+```
 
 <br />
 

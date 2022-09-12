@@ -162,6 +162,8 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    *
    * For more information about each event and their activity types, see "Events that trigger workflows."
    */
+  // @ts-expect-error This type would be very difficult to infer due to the
+  // builder pattern.
   on<Options extends WorkflowDispatchOptions>(
     event: "workflow_dispatch",
     options: WithContext<Options, Base>,
@@ -204,7 +206,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
       this.#on[event] = optionsObject ? optionsObject : null;
     }
 
-    return this as any;
+    return this;
   }
 
   /**
@@ -283,7 +285,9 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
     env: WithContext<Env, Base>,
   ): Workflow<CombineAsUnion<Base | { env: StringKeyOf<Env> }>> {
     this.#env = getFromContext(env);
-    return this as any;
+    // @ts-expect-error This type would be very difficult to infer due to the
+    // builder pattern.
+    return this;
   }
 
   /**
@@ -422,7 +426,9 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
     >
   > {
     this.#jobs[id] = isFunction(job) ? job(Job.create(), context()) : job;
-    return this as any;
+    // @ts-expect-error This type would be very difficult to infer due to the
+    // builder pattern.
+    return this;
   }
 
   /**
@@ -438,7 +444,9 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
       this.#jobs[id] = isFunction(job) ? job(Job.create(), context()) : job;
     }
 
-    return this as any;
+    // @ts-expect-error This type would be very difficult to infer due to the
+    // builder pattern.
+    return this;
   }
 
   toJSON() {

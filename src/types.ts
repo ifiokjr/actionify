@@ -103,6 +103,7 @@ export interface ActionTemplate {
   /** Jobs to their outputs */
   jobs?: string;
   jobOutputs?: string;
+  hoistEnv?: string;
   steps?: string;
   stepOutputs?: string;
   secrets?: string;
@@ -110,6 +111,7 @@ export interface ActionTemplate {
   matrix?: string;
   inputs?: string;
   stepId?: string | undefined;
+  tmp?: unknown;
 }
 
 // type B = {[Key in 'a'  | 'b' as `job_outputs:${Key}`]: Key}
@@ -1108,7 +1110,7 @@ export type SetPermissions =
   | Expression<PermissionAll>
   | Permissions;
 export type PermissionAll = "read-all" | "write-all";
-export type Listed<Type> = Type | readonly Type[];
+export type Listed<Type> = Type | readonly Type[] | Type[];
 interface ActivityTypes<Action extends string> {
   /**
    * The activity types to trigger on.

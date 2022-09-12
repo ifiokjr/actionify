@@ -1,4 +1,5 @@
 import {
+  commands,
   defineWorkflows,
   e,
   job,
@@ -10,13 +11,15 @@ import {
 
 const deno = ["v1.24.x", "v1.x", "canary"];
 const os = [Runner.MacOSLatest, Runner.UbuntuLatest];
-const env = { DENO_DIR: e.concat(e.ctx.runner.temp, "/deno_cache") };
+const envStep = step().name("Set environment").run((ctx) =>
+  commands.setEnv("DENO_DIR", e.concat(ctx.runner.temp, "/deno_cache"))
+);
 
 const testJob = job()
   .strategy({ matrix: { deno, os } })
   .timeoutMinutes(5)
   .runsOn((ctx) => e.expr(ctx.matrix.os))
-  .env(env)
+  .step(envStep)
   .steps(sharedSteps())
   .step((step) => {
     return step
@@ -50,7 +53,7 @@ const publishJob = job<{ jobs: "test" }>()
   .needs("test")
   .timeoutMinutes(5)
   .runsOn(Runner.UbuntuLatest)
-  .env(env)
+  .step(envStep)
   .steps(sharedSteps(false))
   .step((step) => {
     return step

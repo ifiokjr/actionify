@@ -13,8 +13,6 @@ name: ci
 jobs:
   test:
     runs-on: ${{ matrix.os }}
-    env:
-      DENO_DIR: ${{ runner.temp }}/deno_cache
     timeout-minutes: 5
     strategy:
       matrix:
@@ -26,6 +24,8 @@ jobs:
           - macos-latest
           - ubuntu-latest
     steps:
+      - name: Set environment
+        run: echo "DENO_DIR=${{ runner.temp }}/deno_cache" >> $GITHUB_ENV
       - name: 🏴‍☠️ Checkout
         uses: actions/checkout@v3
       - name: 📦 Cache
@@ -54,10 +54,10 @@ jobs:
   publish:
     needs: test
     runs-on: ubuntu-latest
-    env:
-      DENO_DIR: ${{ runner.temp }}/deno_cache
     timeout-minutes: 5
     steps:
+      - name: Set environment
+        run: echo "DENO_DIR=${{ runner.temp }}/deno_cache" >> $GITHUB_ENV
       - name: 🏴‍☠️ Checkout
         uses: actions/checkout@v3
       - name: 📦 Cache

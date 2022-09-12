@@ -49,7 +49,9 @@ export function proxy<Type>(): Type {
     });
   }
 
-  return create(createContext([])) as any;
+  // @ts-expect-error This type would be very difficult to infer due to the
+  // builder pattern.
+  return create(createContext([]));
 }
 
 export type Context<Type> = BaseContext<Type> & Contextify<Type>;

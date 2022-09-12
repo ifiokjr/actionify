@@ -7,6 +7,7 @@ import type {
   CombineAsUnion,
   EnvProps,
   HasActionTemplate,
+  Listed,
   LiteralString,
   Shell,
   WithStep,
@@ -56,7 +57,9 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
    */
   id<Id extends string>(id: Id): Step<CombineAsUnion<Base | { stepId: Id }>> {
     this.#id = id;
-    return this as any;
+    // @ts-expect-error This type would be very difficult to infer due to the
+    // builder pattern.
+    return this;
   }
 
   /**
@@ -219,14 +222,16 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
    *   .run('npm install');
    * ```
    */
-  run<Type extends AnyCommand | string>(
-    run: WithContext<Type | Type[], Base>,
-  ): Step<CombineAsUnion<Base | { stepOutputs: ExtractOutputs<Type> }>> {
+  run<Type extends AnyCommand>(
+    run: WithContext<Listed<Type | string>, Base>,
+  ): Step<CombineAsUnion<Base | ExtractCommand<Type>>> {
     const value = getFromContext(run);
     this.#run = (isArray(value) ? value : [value])
       .map((command) => `${command}`)
       .join("\n");
-    return this as any;
+    // @ts-expect-error This type would be very difficult to infer due to the
+    // builder pattern.
+    return this;
   }
 
   /**
@@ -299,7 +304,9 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
     env: WithContext<Env, Base>,
   ): Step<CombineAsUnion<Base | { env: StringKeyOf<Env> }>> {
     this.#env = getFromContext(env);
-    return this as any;
+    // @ts-expect-error This type would be very difficult to infer due to the
+    // builder pattern.
+    return this;
   }
 
   /**
@@ -350,8 +357,20 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
 }
 
 export type AnyStep = Step<any>;
-export type ExtractOutputs<Type> = Type extends
-  Command<infer Output extends string> ? Output : never;
+// export type ExtractCommand<Type> =
+//   | GetOutputs<Type>
+//   | GetJobEnv<Type>;
+export type ExtractCommand<C extends AnyCommand> = C extends Command<infer T> ? //  T["output"]
+  { stepOutputs: T["output"] } | { hoistEnv: T["env"]; env: T["env"] }
+  : never;
+
+// type GetOutputs<Type> = Type extends Command<infer Output extends string, any>
+//   ? { stepOutputs: Output }
+//   : never;
+// type GetJobEnv<Type> = Type extends Command<any, infer Env extends string>
+//   ? { hoistEnv: Env }
+//   : never;
+
 interface WithProps {
   [key: string]: ExpressionValue;
 

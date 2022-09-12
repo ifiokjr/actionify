@@ -110,7 +110,10 @@ export class Job<
     needs: WithContext<Name | Name[], Base>,
   ): Job<CombineAsUnion<Base | { needs: Name }>> {
     this.#needs = getFromContext(needs);
-    return this as any;
+
+    // @ts-expect-error This type would be very difficult to infer due to the
+    // builder pattern.
+    return this;
   }
 
   /**
@@ -146,7 +149,9 @@ export class Job<
     outputs: WithContext<Options, Base>,
   ): Job<CombineAsUnion<Base | { jobOutputs: StringKeyOf<Options> }>> {
     this.#outputs = getFromContext(outputs);
-    return this as any;
+    // @ts-expect-error This type would be very difficult to infer due to the
+    // builder pattern.
+    return this;
   }
 
   /**
@@ -411,7 +416,9 @@ export class Job<
     env: WithContext<Env, Base>,
   ): Job<CombineAsUnion<Base | { env: StringKeyOf<Env> }>> {
     this.#env = getFromContext(env);
-    return this as any;
+    // @ts-expect-error This type would be very difficult to infer due to the
+    // builder pattern.
+    return this;
   }
 
   /**
@@ -487,7 +494,9 @@ export class Job<
     >
   > {
     this.#strategy = getFromContext(strategy);
-    return this as any;
+    // @ts-expect-error This type would be very difficult to infer due to the
+    // builder pattern.
+    return this;
   }
 
   /**
@@ -574,7 +583,9 @@ export class Job<
     container: WithContext<ContainerOptions<Env>, Base>,
   ): Job<CombineAsUnion<Base | { env: StringKeyOf<Env> }>> {
     this.#container = getFromContext(container);
-    return this as any;
+    // @ts-expect-error This type would be very difficult to infer due to the
+    // builder pattern.
+    return this;
   }
 
   /**
@@ -613,7 +624,9 @@ export class Job<
     services: WithContext<Record<Services, ContainerProps>, Base>,
   ): Job<CombineAsUnion<Base | { services: Services }>> {
     this.#services = getFromContext(services);
-    return this as any;
+    // @ts-expect-error This type would be very difficult to infer due to the
+    // builder pattern.
+    return this;
   }
 
   /**
@@ -752,10 +765,19 @@ export class Job<
     Id extends GetStepId<OutputStep> = GetStepId<OutputStep>,
   >(
     step: StepCreator<Base, OutputStep>,
-  ): Job<CombineAsUnion<Base | StepOutput<Id, GetStepOutputs<OutputStep>>>> {
+  ): Job<
+    CombineAsUnion<
+      | Base
+      // | { tmp: OutputStep["zBase$"]["hoistEnv"] }
+      | GetStepEnv<OutputStep>
+      | StepOutput<Id, GetStepOutputs<OutputStep>>
+    >
+  > {
     const result = isFunction(step) ? step(Step.create(), context()) : step;
     this.#steps.push(result);
-    return this as any;
+    // @ts-expect-error This type would be very difficult to infer due to the
+    // builder pattern.
+    return this;
   }
 
   /**
@@ -768,7 +790,9 @@ export class Job<
       isFunction(step) ? step(Step.create(), context()) : step
     );
     this.#steps.push(...results);
-    return this as any;
+    // @ts-expect-error This type would be very difficult to infer due to the
+    // builder pattern.
+    return this;
   }
 
   toString() {
@@ -904,11 +928,16 @@ type GetStepOutputs<Type extends AnyStep> = unknown extends
   GetTemplate<Type>["stepOutputs"] ? never
   : GetTemplate<Type>["stepOutputs"];
 
+type GetStepEnv<Type extends AnyStep> = unknown extends
+  GetTemplate<Type>["hoistEnv"] ? never
+  : { env: GetTemplate<Type>["hoistEnv"] };
+
 type GetSteps<
   Base extends ActionTemplate,
   Steps extends ReadonlyArray<StepCreator<Base, AnyStep>>,
 > // Id extends GetStepId<OutputStep> = GetStepId<OutputStep>,
  = Steps extends Array<StepCreator<Base, infer S>>
-  ? S extends AnyStep ? StepOutput<GetStepId<S>, GetStepOutputs<S>>
+  ? S extends AnyStep
+    ? StepOutput<GetStepId<S>, GetStepOutputs<S>> | GetStepEnv<S>
   : never
   : never;

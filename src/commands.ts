@@ -1,5 +1,15 @@
 import { ExpressionValue } from "./expressions.ts";
 
+interface CommandTypes {
+  output?: string;
+  env?: string;
+}
+
+interface DefaultCommandTypes {
+  output: never;
+  env: never;
+}
+
 /**
  * Actions can communicate with the runner machine to set environment variables,
  * output values used by other actions, add debug messages to the output logs,
@@ -8,12 +18,14 @@ import { ExpressionValue } from "./expressions.ts";
  * Most workflow commands use the echo command in a specific format, while
  * others are invoked by writing to a file
  */
-export class Command<Output extends string> {
-  static create<Output extends string = never>(value: string) {
-    return new Command<Output>(value);
+export class Command<Types extends CommandTypes> {
+  static create<Types extends CommandTypes = DefaultCommandTypes>(
+    value: string,
+  ): Command<Types> {
+    return new Command(value);
   }
 
-  declare z$: Output;
+  declare z$: Types;
   #value: string;
 
   private constructor(value: string) {
@@ -44,7 +56,9 @@ export type AnyCommand = Command<any>;
  *   .run(commands.setDebug('This is a debug message'));
  * ```
  */
-export function setDebug(message: ExpressionValue): Command<never> {
+export function setDebug(
+  message: ExpressionValue,
+): Command<DefaultCommandTypes> {
   return Command.create(`echo ::debug::${message}`);
 }
 
@@ -103,7 +117,7 @@ interface NoticeOptions {
 export function setNotice(
   message: ExpressionValue,
   options: NoticeOptions = {},
-): Command<never> {
+): Command<DefaultCommandTypes> {
   const props = Object.entries(options).map(([key, value]) => `${key}=${value}`)
     .join(",");
   return Command.create(`echo ::notice ${props}::${message}`);
@@ -132,7 +146,7 @@ export function setNotice(
 export function setWarning(
   message: ExpressionValue,
   options: NoticeOptions = {},
-): Command<never> {
+): Command<DefaultCommandTypes> {
   const props = Object.entries(options).map(([key, value]) => `${key}=${value}`)
     .join(",");
   return Command.create(`echo ::warning ${props}::${message}`);
@@ -161,7 +175,7 @@ export function setWarning(
 export function setError(
   message: ExpressionValue,
   options: NoticeOptions = {},
-): Command<never> {
+): Command<DefaultCommandTypes> {
   const props = Object.entries(options).map(([key, value]) => `${key}=${value}`)
     .join(",");
   return Command.create(`echo ::error ${props}::${message}`);
@@ -186,7 +200,7 @@ export function setError(
  *   ]);
  * ```
  */
-export function setMask(value: ExpressionValue): Command<never> {
+export function setMask(value: ExpressionValue): Command<DefaultCommandTypes> {
   return Command.create(`echo ::add-mask::${value}`);
 }
 
@@ -204,9 +218,67 @@ export function setMask(value: ExpressionValue): Command<never> {
  *   ));
  * ```
  */
-export function setOutput<Name extends string>(
-  name: Name,
+export function setOutput<Output extends string>(
+  name: Output,
   value: ExpressionValue,
-): Command<Name> {
+): Command<{ output: Output; env: never }> {
   return Command.create(`echo "::set-output name=${name}::${value}"`);
+}
+
+/**
+ * Creates an expandable group in the log. To create a group, use the group
+ * command and specify a title. Anything you print to the log between the group
+ * and endgroup commands is nested inside an expandable entry in the log.
+ *
+ * This can be used to run multiple commands in a single run command.
+ *
+ * ```ts
+ * import { commands, e, Step } from "https://deno.land/x/actionify/mod.ts";
+ *
+ * const step = Step
+ *   .create()
+ *   .run(commands.group("My group", [
+ *     commands.setOutput(
+ *       "variableName",
+ *       e.hashFiles("**package.json"),
+ *     ),
+ *     'Another command',
+ *     commands.setOutput(
+ *       "anotherOne",
+ *       e.hashFiles("**lock.json"),
+ *     ),
+ *   ]));
+ * ```
+ */
+export function group<Commands extends AnyCommand>(
+  title: string,
+  commands: Array<Commands | string>,
+): Array<Commands | string> {
+  return [`echo "::group::${title}"`, ...commands, `echo "::endgroup::"`];
+}
+
+/**
+ * You can make an environment variable available to any subsequent steps in a
+ * workflow job by defining or updating the environment variable and writing
+ * this to the GITHUB_ENV environment file. The step that creates or updates the
+ * environment variable does not have access to the new value, but all
+ * subsequent steps in a job will have access. The names of environment
+ * variables are case-sensitive, and you can include punctuation.
+ *
+ * ```ts
+ * import { commands, Step } from "https://deno.land/x/actionify/mod.ts";
+ *
+ * const step = Step
+ *   .create()
+ *   .run(commands.setEnv(
+ *     "AWESOME_ENV",
+ *     "this is the env",
+ *   ));
+ * ```
+ */
+export function setEnv<Env extends string>(
+  name: Env,
+  value: ExpressionValue,
+): Command<{ env: Env; output: never }> {
+  return Command.create(`echo "${name}=${value}" >> $GITHUB_ENV`);
 }
