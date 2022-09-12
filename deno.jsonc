@@ -2,7 +2,8 @@
   "tasks": {
     "check": "deno task fix && deno task lint && deno task test && deno task test:docs && deno task typecheck && CI=true deno task lock",
     "fix:format": "dprint fmt",
-    "fix": "deno task fix:format",
+    "fix:workflows": "deno run -A cli.ts",
+    "fix": "deno task fix:format && deno task fix:workflows",
     "lint:format": "dprint check",
     "lint:ts": "deno lint",
     "lint": "deno task lint:ts && deno task lint:format",

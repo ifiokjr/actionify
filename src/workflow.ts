@@ -108,7 +108,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * made to any branch in the workflow's repository:
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -122,7 +122,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * the repository or when someone forks the repository:
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -141,7 +141,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * For example, the issue_comment event has the created, edited, and deleted activity types. If your workflow triggers on the label event, it will run whenever a label is created, edited, or deleted. If you specify the created activity type for the label event, your workflow will run when a label is created but not when a label is edited or deleted.
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -152,7 +152,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * If you specify multiple activity types, only one of those event activity types needs to occur to trigger your workflow. If multiple triggering event activity types for your workflow occur at the same time, multiple workflow runs will be triggered. For example, the following workflow triggers when an issue is opened or labeled. If an issue with two labels is opened, three workflow runs will start: one for the issue opened event and two for the two issue labeled events.
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -228,7 +228,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * You can use the following syntax to define read or write access for all of the available scopes:
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -239,7 +239,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * To disable permissions for all available scopes use the following:
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -273,7 +273,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * job executes.
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -310,7 +310,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * ##### Set the default shell and working directory
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -342,7 +342,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * ##### Using concurrency and the default behavior
    *
    * ```ts
-   * import { Workflow, e } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -353,7 +353,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * ##### Using concurrency to cancel any in-progress job or run
    *
    * ```ts
-   * import { Workflow, e } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -376,7 +376,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * guaranteed to be both unique and defined for the run.
    *
    * ```ts
-   * import { Workflow, e } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -398,7 +398,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * github.workflow property to build the concurrency group:
    *
    * ```ts
-   * import { Workflow, e } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })

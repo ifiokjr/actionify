@@ -4,7 +4,7 @@ import {
   e,
   Runner,
   Workflow,
-} from "https://deno.land/x/actionify/mod.ts";
+} from "https://deno.land/x/actionify@0.1.0/mod.ts";
 
 const ciWorkflow = Workflow
   .create({ name: "ci", fileName: "ci" })

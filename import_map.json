@@ -1,7 +1,6 @@
 {
   "imports": {
-    "https://deno.land/x/actionify/": "./",
-    "https://deno.land/x/actionify@0.0.0/": "./",
+    "https://deno.land/x/actionify@0.1.0/": "./",
     "https://act.deno.dev/actions/checkout": "./src/remote/stub.ts",
     "$fresh/": "https://deno.land/x/fresh@1.1.0/",
     "preact": "https://esm.sh/preact@10.10.6",

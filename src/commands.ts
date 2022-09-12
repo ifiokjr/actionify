@@ -49,7 +49,7 @@ export type AnyCommand = Command<any>;
  * this command in the log.
  *
  * ```ts
- * import { Step, commands } from 'https://deno.land/x/actionify/mod.ts';
+ * import { Step, commands } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
  *
  * const step = Step
  *   .create()
@@ -101,7 +101,7 @@ interface NoticeOptions {
  * the file.
  *
  * ```ts
- * import { Step, commands } from 'https://deno.land/x/actionify/mod.ts';
+ * import { Step, commands } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
  *
  * const step = Step
  *   .create()
@@ -130,7 +130,7 @@ export function setNotice(
  * within the file.
  *
  * ```ts
- * import { Step, commands } from 'https://deno.land/x/actionify/mod.ts';
+ * import { Step, commands } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
  *
  * const step = Step
  *   .create()
@@ -159,7 +159,7 @@ export function setWarning(
  * the file.
  *
  * ```ts
- * import { Step, commands } from 'https://deno.land/x/actionify/mod.ts';
+ * import { Step, commands } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
  *
  * const step = Step
  *   .create()
@@ -190,7 +190,7 @@ export function setError(
  * an output.
  *
  * ```ts
- * import { Step, commands } from 'https://deno.land/x/actionify/mod.ts';
+ * import { Step, commands } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
  *
  * const step = Step
  *   .create()
@@ -208,7 +208,7 @@ export function setMask(value: ExpressionValue): Command<DefaultCommandTypes> {
  * Sets an action's output parameter.
  *
  * ```ts
- * import { commands, e, Step } from 'https://deno.land/x/actionify/mod.ts';
+ * import { commands, e, Step } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
  *
  * const step = Step
  *   .create()
@@ -233,7 +233,7 @@ export function setOutput<Output extends string>(
  * This can be used to run multiple commands in a single run command.
  *
  * ```ts
- * import { commands, e, Step } from "https://deno.land/x/actionify/mod.ts";
+ * import { commands, e, Step } from "https://deno.land/x/actionify@0.1.0/mod.ts";
  *
  * const step = Step
  *   .create()
@@ -269,7 +269,7 @@ export function group<Commands extends AnyCommand>(
  * setting it to the empty string.
  *
  * ```ts
- * import { commands, step } from "https://deno.land/x/actionify@0.0.0/mod.ts";
+ * import { commands, step } from "https://deno.land/x/actionify@0.1.0/mod.ts";
  *
  * const addStep = step()
  *   .run(commands.exportVariable(
@@ -323,7 +323,7 @@ function getRandomValue(prefix = "") {
  * paths for your job, you can use echo "$PATH" in a step or an action.
  *
  * ```ts
- * import { commands, step } from "https://deno.land/x/actionify@0.0.0/mod.ts";
+ * import { commands, step } from "https://deno.land/x/actionify@0.1.0/mod.ts";
  *
  * const pathStep = step()
  *   .run(commands.addPath("$HOME/.local/bin"));

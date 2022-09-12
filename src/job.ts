@@ -96,7 +96,7 @@ export class Job<
    * #### Requiring successful dependent jobs
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: "ci", fileName: "ci" })
@@ -132,7 +132,7 @@ export class Job<
    * more information, see "Contexts."
    *
    * ```ts
-   * import { Workflow, e } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: "ci", fileName: "ci" })
@@ -169,7 +169,7 @@ export class Job<
    * Otherwise, the job will be marked as skipped.
    *
    * ```ts
-   * import { Workflow, e } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: "ci", fileName: "ci" })
@@ -195,7 +195,7 @@ export class Job<
    * `.strategy()`.
    *
    * ```ts
-   * import { Workflow, Runner } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow, Runner } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -220,7 +220,7 @@ export class Job<
    * not unintentionally specify any current or future GitHub-hosted runners.
    *
    * ```ts
-   * import { Workflow, Runner } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow, Runner } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -248,7 +248,7 @@ export class Job<
    * ##### Using a single environment name
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -258,7 +258,7 @@ export class Job<
    * ##### Using environment name and URL
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -274,7 +274,7 @@ export class Job<
    * ##### Using output as URL
    *
    * ```ts
-   * import { commands, e, Workflow } from "https://deno.land/x/actionify/mod.ts";
+   * import { commands, e, Workflow } from "https://deno.land/x/actionify@0.1.0/mod.ts";
    *
    * const workflow = Workflow
    *   .create({ name: "ci" })
@@ -317,7 +317,7 @@ export class Job<
    * ##### Using concurrency and the default behavior
    *
    * ```ts
-   * import { Workflow, e } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -328,7 +328,7 @@ export class Job<
    * ##### Using concurrency to cancel any in-progress job or run
    *
    * ```ts
-   * import { Workflow, e } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -351,7 +351,7 @@ export class Job<
    * guaranteed to be both unique and defined for the run.
    *
    * ```ts
-   * import { Workflow, e } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -373,7 +373,7 @@ export class Job<
    * github.workflow property to build the concurrency group:
    *
    * ```ts
-   * import { Workflow, e } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -403,7 +403,7 @@ export class Job<
    * job executes.
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -441,7 +441,7 @@ export class Job<
    * ##### Set the default shell and working directory
    *
    * ```ts
-   * import { Workflow } from "https://deno.land/x/actionify/mod.ts";
+   * import { Workflow } from "https://deno.land/x/actionify@0.1.0/mod.ts";
    *
    * const workflow = Workflow
    *   .create({ name: "ci" })
@@ -525,7 +525,7 @@ export class Job<
    * with node set to 15 to fail without failing the workflow run.
    *
    * ```ts
-   * import { Workflow, e, Runner } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow, e, Runner } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci', })
@@ -643,7 +643,7 @@ export class Job<
    *   workflow is from the same commit as the caller workflow.
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -680,7 +680,7 @@ export class Job<
    * context.
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify/mod.ts';
+   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -703,7 +703,7 @@ export class Job<
    * workflow.
    *
    * ```ts
-   * import { e, Workflow } from 'https://deno.land/x/actionify/mod.ts';
+   * import { e, Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
@@ -723,7 +723,7 @@ export class Job<
    * organization, or across organizations within the same enterprise.
    *
    * ```ts
-   * import { e, Runner, Workflow } from 'https://deno.land/x/actionify/mod.ts';
+   * import { e, Runner, Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: 'ci' })
