@@ -362,8 +362,8 @@ export type AnyStep = Step<any>;
 // export type ExtractCommand<Type> =
 //   | GetOutputs<Type>
 //   | GetJobEnv<Type>;
-export type ExtractCommand<C extends AnyCommand> = C extends Command<infer T> ? //  T["output"]
-  { stepOutputs: T["output"] } | { hoistEnv: T["env"]; env: T["env"] }
+export type ExtractCommand<C extends AnyCommand> = C extends Command<infer T> //  T["output"]
+  ? { stepOutputs: T["output"] } | { hoistEnv: T["env"]; env: T["env"] }
   : never;
 
 // type GetOutputs<Type> = Type extends Command<infer Output extends string, any>
