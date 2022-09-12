@@ -94,6 +94,7 @@ function sharedSteps(withMatrix = true) {
       .with((ctx) => ({
         "deno-version": withMatrix ? e.expr(ctx.matrix.deno) : "v1.x",
       })),
-    step().name("🔒 Lock").run("deno task lock").shell(Shell.Bash),
+    step().name("🔒 Lock").run("deno task lock").shell(Shell.Bash)
+      .continueOnError(),
   ] as const;
 }

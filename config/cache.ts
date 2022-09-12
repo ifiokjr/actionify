@@ -1,4 +1,3 @@
-import * as path from "../src/deps/path.ts";
 import { getLogger, globber, parse } from "./deps.ts";
 import { cwd } from "./helpers.ts";
 

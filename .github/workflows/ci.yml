@@ -33,12 +33,13 @@ jobs:
         with:
           path: ${{ env.DENO_DIR }}
           key: ${{ hashFiles('lock.json') }}-${{ matrix.deno }}-${{ matrix.os }}
-      - uses: denoland/setup-deno@v1.0.0
+      - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ matrix.deno }}
       - name: 🔒 Lock
         run: deno task lock
         shell: bash
+        continue-on-error: true
       - if: ${{ matrix.os == 'ubuntu-latest' }}
         name: 🩺 Format
         uses: dprint/check@v2.0
@@ -65,12 +66,13 @@ jobs:
         with:
           path: ${{ env.DENO_DIR }}
           key: ${{ hashFiles('lock.json') }}-v1.x-ubuntu-latest
-      - uses: denoland/setup-deno@v1.0.0
+      - uses: denoland/setup-deno@v1
         with:
           deno-version: v1.x
       - name: 🔒 Lock
         run: deno task lock
         shell: bash
+        continue-on-error: true
       - name: 🦕 Publish
         run: deno task publish
         env:

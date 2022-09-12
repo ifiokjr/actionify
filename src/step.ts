@@ -312,8 +312,10 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
   /**
    * Prevents a job from failing when a step fails. Set to true to allow a job
    * to pass when this step fails.
+   *
+   * Calling with no arguments will set the value to `true`.
    */
-  continueOnError(continueOnError: WithContext<ExpressionValue, Base>) {
+  continueOnError(continueOnError: WithContext<ExpressionValue, Base> = true) {
     this.#continueOnError = getFromContext(continueOnError);
     return this;
   }
