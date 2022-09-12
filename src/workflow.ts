@@ -27,6 +27,15 @@ import type {
 } from "./types.ts";
 import { getFromContext } from "./utils.ts";
 
+/**
+ * Create a workflow.
+ */
+export function workflow<Base extends ActionTemplate = {}>(
+  props: CreateWorkflowProps,
+): Workflow<Base> {
+  return Workflow.create(props);
+}
+
 interface CreateWorkflowProps {
   name: string;
   /**
@@ -51,8 +60,8 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
 
   static create<Base extends ActionTemplate = {}>(
     props: CreateWorkflowProps,
-  ) {
-    return new this<Base>(props);
+  ): Workflow<Base> {
+    return new Workflow(props);
   }
 
   /**

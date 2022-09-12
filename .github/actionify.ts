@@ -35,7 +35,7 @@ function sharedSteps(withMatrix = true) {
   ] as const;
 }
 
-const deno = ["v1.x", "canary"];
+const deno = ["v1.24.x", "v1.x", "canary"];
 const os = [Runner.MacOSLatest, Runner.UbuntuLatest];
 
 const testJob = Job
@@ -48,41 +48,28 @@ const testJob = Job
     return step
       .name("🩺 Format")
       .uses("dprint/check@v2.0")
-      .if((ctx) => {
-        return e.and(
-          e.startsWith(ctx.matrix.os, "ubuntu"),
-          e.eq(ctx.matrix.deno, "canary"),
-        );
-      });
+      .if((ctx) => e.eq(ctx.matrix.os, Runner.UbuntuLatest));
   })
   .step((step) => {
     return step
       .name("👩‍⚕️ Lint")
-      .if((ctx) => {
-        return e.and(
-          e.startsWith(ctx.matrix.os, "ubuntu"),
-          e.eq(ctx.matrix.deno, "canary"),
-        );
-      })
+      .if((ctx) => e.eq(ctx.matrix.os, Runner.UbuntuLatest))
       .run("deno lint");
   })
   .step((step) => {
     return step
       .name("🩺 Typecheck")
-      .run("deno task typecheck")
-      .shell(Shell.Bash);
+      .run("deno task typecheck");
   })
   .step((step) => {
     return step
       .name("✅ Unittest")
-      .run("deno task test")
-      .shell(Shell.Bash);
+      .run("deno task test");
   })
   .step((step) => {
     return step
       .name("📝 Docs")
-      .run("deno task test:docs")
-      .shell(Shell.Bash);
+      .run("deno task test:docs");
   });
 
 const publishJob = Job

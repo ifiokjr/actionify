@@ -1,4 +1,5 @@
 import { join } from "./deps/path.ts";
+import { VERSION } from "./meta.ts";
 import { AnyWorkflow } from "./workflow.ts";
 
 type Replace<Type, Replacement extends object> =
@@ -26,20 +27,41 @@ export interface DefineWorkflowsProps {
   workflows: AnyWorkflow[];
 }
 
-export type WorkflowOutput = Replace<
-  Required<DefineWorkflowsProps>,
+const $$_ID_$$ = Symbol.for("WorkflowOutput");
+
+interface WorkflowMeta extends DefineWorkflowsProps {
+  /** The version used to create this workflow */
+  version: string;
+  readonly $$_ID_$$: typeof $$_ID_$$;
+}
+export type DefineWorkflowOutput = Replace<
+  Required<WorkflowMeta>,
   { rootDirectory: string }
 >;
 
 export function defineWorkflows(
   props: DefineWorkflowsProps,
-): WorkflowOutput {
+): DefineWorkflowOutput {
   return {
     ...props,
     cleanupRoot: !!props.cleanupRoot,
     rootDirectory: getRootDirectory(props.rootDirectory),
+    version: VERSION,
+    $$_ID_$$,
   };
 }
+
+/**
+ * Check that the exported
+ */
+export function isWorkflowOutput(
+  value: unknown,
+): value is DefineWorkflowOutput {
+  return typeof value === "object" &&
+    (value as PlainObject).$$_ID_$$ === $$_ID_$$;
+}
+
+type PlainObject = Record<string, unknown>;
 
 export function getRootDirectory(root: string | URL | undefined): string {
   return root instanceof URL

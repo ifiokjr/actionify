@@ -13,6 +13,15 @@ import type {
 } from "./types.ts";
 import { getFromContext } from "./utils.ts";
 
+/**
+ * Create a step which can be added to jobs.
+ */
+export function step<
+  Base extends ActionTemplate = { stepId: never },
+>(): Step<WithStep<Base>> {
+  return Step.create();
+}
+
 export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
   implements HasActionTemplate<Base> {
   static create<

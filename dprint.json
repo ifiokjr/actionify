@@ -12,10 +12,10 @@
     "textWrap": "never"
   },
   "toml": {},
-  "includes": ["**/*.{ts,tsx,js,jsx,cjs,mjs,json,jsonc,md,toml,dockerfile}"],
-  "excludes": [
-    "**/snapshots"
+  "includes": [
+    "**/*.{ts,tsx,js,jsx,cjs,mjs,json,jsonc,md,toml,dockerfile}"
   ],
+  "excludes": ["**/snapshots"],
   "plugins": [
     "https://plugins.dprint.dev/typescript-0.71.1.wasm",
     "https://plugins.dprint.dev/json-0.15.4.wasm",

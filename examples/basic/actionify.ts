@@ -19,22 +19,16 @@ const ciWorkflow = Workflow
   .env({ "AWESOME": "true" })
   .defaults({ run: { shell: "bash" } })
   .permissions("write-all")
-  .job(
-    "a",
-    (job) => {
-      return job
-        .name("A")
-        .outputs((ctx) => ({ action: e.expr(ctx.env.GITHUB_ACTION) }));
-    },
-  )
-  .job(
-    "b",
-    (job) => {
-      return job
-        .name("B")
-        .outputs((ctx) => ({ ci: e.expr(ctx.env.CI) }));
-    },
-  )
+  .job("a", (job) => {
+    return job
+      .name("A")
+      .outputs((ctx) => ({ action: e.expr(ctx.env.GITHUB_ACTION) }));
+  })
+  .job("b", (job) => {
+    return job
+      .name("B")
+      .outputs((ctx) => ({ ci: e.expr(ctx.env.CI) }));
+  })
   .job("c", (job) => {
     const result = job
       .needs("a")
@@ -71,9 +65,7 @@ const ciWorkflow = Workflow
   })
   .env((ctx) => ({ YO: e.expr(ctx.github.workspace) }));
 
-const rootDirectory = import.meta.resolve("./tmp/workflows");
-
 export default defineWorkflows({
-  rootDirectory,
+  rootDirectory: import.meta.resolve("./"),
   workflows: [ciWorkflow],
 });

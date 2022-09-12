@@ -19,7 +19,7 @@
     "update:deps": "deno run --allow-net --allow-read --allow-write config/update.ts",
     "update:dprint": "dprint config update",
     "update": "deno task update:dprint && deno task update:deps",
-    "version": "deno run -A ./config/version.ts"
+    "version": "deno run -A ./config/version.ts && deno task test:snapshot && deno task fix"
   },
   "compilerOptions": {
     "noUncheckedIndexedAccess": true,

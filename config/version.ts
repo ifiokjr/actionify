@@ -196,7 +196,7 @@ async function updateMarkdownFiles(props: ChangelogVersion) {
     cwd,
     exclude: ["changelog.md"],
     caseInsensitive: true,
-    extensions: [".md"],
+    extensions: [".md", ".json", ".ts"],
   });
 
   const promises: Array<Promise<void>> = [];

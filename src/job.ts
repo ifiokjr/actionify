@@ -26,6 +26,13 @@ import type {
 } from "./types.ts";
 import { getFromContext } from "./utils.ts";
 
+/**
+ * Create a job which can be added to a workflow.
+ */
+export function job<Base extends ActionTemplate = {}>(): Job<WithJob<Base>> {
+  return Job.create();
+}
+
 export class Job<
   Base extends ActionTemplate = WithJob<ActionTemplate>,
 > implements HasActionTemplate<Base> {
@@ -61,6 +68,8 @@ export class Job<
   #with: Record<string, ExpressionValue> | undefined;
   #secrets: SecretsInput | undefined;
   #steps: AnyStep[] = [];
+
+  private constructor() {}
 
   /**
    * Use jobs.<job_id>.name to set a name for the job, which is displayed in the

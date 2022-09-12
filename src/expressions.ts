@@ -5,6 +5,13 @@ import { ActionData, ActionTemplate, BaseContext } from "./types.ts";
  * An expression which is evaluated within the github action context.
  */
 export class Expression<Type = unknown> {
+  /**
+   * Check whether the value is an expression.
+   */
+  static is(value: unknown): value is Expression {
+    return value instanceof Expression;
+  }
+
   static create<Type = unknown>(
     ...items: Array<ExpressionContent<Type> | string | undefined>
   ) {
@@ -39,21 +46,31 @@ export class Expression<Type = unknown> {
     return this;
   }
 
+  /**
+   * @internal
+   */
   cast<T = Type>() {
     return this as unknown as Expression<T>;
   }
 
-  output() {
-    return wrap(this.toString());
+  /**
+   * Wrap the expression as an interpolation `${{ <EXPRESSION> }}` so that it
+   * can be used in different scopes.
+   */
+  wrap() {
+    return `$\{\{ ${this.toString()} }}`;
   }
 
   toJSON() {
-    return this.output();
+    return this.wrap();
   }
 }
 
-export function wrap(operation: string) {
-  return `$\{\{ ${operation} }}`;
+/**
+ * Wrap an expression or context as an interpolation `${{ <EXPRESSION> }}`.
+ */
+export function wrap(content: ExpressionContent) {
+  return Expression.create(content).wrap();
 }
 
 /**

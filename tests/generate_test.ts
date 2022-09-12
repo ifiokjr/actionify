@@ -1,11 +1,20 @@
 import { generate } from "../mod.ts";
-import { join } from "../src/deps/path.ts";
-import { describe, it } from "./deps.ts";
+import type { DefineWorkflowOutput } from "../src/config.ts";
+import { path } from "./deps.ts";
 import { snapshot } from "./helpers.ts";
 
-describe("generate", () => {
-  it("basic", async (t) => {
-    const { default: workflows } = await import("./fixtures/basic/mod.ts");
+for await (
+  const example of Deno.readDir(new URL(import.meta.resolve("../examples")))
+) {
+  if (!example.isDirectory) {
+    continue;
+  }
+
+  Deno.test(`${example.name}`, async (t) => {
+    const result = await import(
+      import.meta.resolve(`../examples/${example.name}/actionify.ts`)
+    );
+    const workflows: DefineWorkflowOutput = result.default;
     await generate(workflows);
 
     for await (const entry of Deno.readDir(workflows.rootDirectory)) {
@@ -15,8 +24,8 @@ describe("generate", () => {
 
       await snapshot(
         t,
-        await Deno.readTextFile(join(workflows.rootDirectory, entry.name)),
+        await Deno.readTextFile(path.join(workflows.rootDirectory, entry.name)),
       );
     }
   });
-});
+}
