@@ -21,7 +21,7 @@ const VERSION_KEYWORDS = {
   patch: ["Fix", "Patch", "Other", "🐛"],
 } as const;
 const REGISTRY_REGEX = new RegExp(
-  `https://deno.land/x/${Meta.NAME}(?:@.*)?/`,
+  `https://deno.land/x/${Meta.NAME}(?:@\\d+\\.\\d+\\.\\d+)?/`,
   "g",
 );
 const RELEASES = objectKeys(VERSION_KEYWORDS);
@@ -196,6 +196,7 @@ async function updateMarkdownFiles(props: ChangelogVersion) {
     cwd,
     exclude: ["changelog.md"],
     caseInsensitive: true,
+    dot: true,
     extensions: [".md", ".json", ".ts"],
   });
 

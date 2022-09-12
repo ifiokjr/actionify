@@ -1,4 +1,4 @@
-import { generate } from "./mod.ts";
+import { generate, Meta } from "./mod.ts";
 import {
   Command,
   CompletionsCommand,
@@ -15,14 +15,25 @@ if (!import.meta.main) {
 
 const main = new Command()
   .name("actionify")
-  .arguments("[config:string]")
+  .description(
+    "Generate reusable GitHub Action workflow files with TypeScript.",
+  )
+  .version(Meta.VERSION)
+  .option(
+    "-c, --config [config:string]",
+    "The path to the TypeScript configuration file",
+    { default: "./.github/actionify.ts" },
+  )
   .option(
     "-o, --output [output:string]",
-    "The path to the output default so <CWD>/.github/workflows",
+    "The path to the folder containing the generated workflow `.yml` files.",
     { default: "./.github/workflows" },
-  ).action(async (options, config = "./.github/actionify.ts") => {
-    const { output } = options;
-    const configPath = resolve(config);
+  )
+  .action(async (options) => {
+    const { output, config } = options;
+    const configPath = typeof config === "string"
+      ? resolve(config)
+      : resolve("./.github/actionify.ts");
     const rootDirectory = typeof output === "string"
       ? resolve(output)
       : resolve("./.github/workflows");

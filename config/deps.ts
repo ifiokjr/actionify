@@ -15,4 +15,4 @@ export {
 } from "https://deno.land/x/rusty_markdown@v0.4.1/mod.ts";
 export * as semver from "https://deno.land/x/semver@v1.4.1/mod.ts";
 export { udd, type UddResult } from "https://deno.land/x/udd@0.7.5/mod.ts";
-export { default as gitUrlParse } from "https://esm.sh/git-url-parse@13.0.0/";
+export { default as gitUrlParse } from "https://esm.sh/git-url-parse@12.0.0";
