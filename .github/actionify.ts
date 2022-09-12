@@ -89,7 +89,7 @@ const ciWorkflow = Workflow
   .create({ name: "ci" })
   .on("push", { branches: ["main"] })
   .on("pull_request", { branches: ["main"] })
-  .env({ DENO_DIR: e.concat(e.ctx.github.workspace, "../deno_cache") })
+  .env({ DENO_DIR: e.concat(e.ctx.github.workspace, "/../deno_cache") })
   .job("test", testJob)
   .job("publish", publishJob);
 

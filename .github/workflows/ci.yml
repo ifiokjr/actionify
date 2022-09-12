@@ -11,7 +11,7 @@ name: ci
     branches:
       - main
 env:
-  DENO_DIR: ${{ join([github.workspace, '../deno_cache'], '') }}
+  DENO_DIR: ${{ github.workspace }}/../deno_cache
 jobs:
   test:
     runs-on: ${{ matrix.os }}
@@ -19,6 +19,7 @@ jobs:
     strategy:
       matrix:
         deno:
+          - v1.24.x
           - v1.x
           - canary
         os:
@@ -31,28 +32,25 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ env.DENO_DIR }}
-          key: ${{ join([hashFiles('lock.json'), '-', matrix.deno, '-', matrix.os], '') }}
+          key: ${{ hashFiles('lock.json') }}-${{ matrix.deno }}-${{ matrix.os }}
       - uses: denoland/setup-deno@v1.0.0
         with:
           deno-version: ${{ matrix.deno }}
       - name: 🔒 Lock
         run: deno task lock
         shell: bash
-      - if: ${{ startsWith(matrix.os, 'ubuntu') && matrix.deno == 'canary' }}
+      - if: ${{ matrix.os == 'ubuntu-latest' }}
         name: 🩺 Format
         uses: dprint/check@v2.0
-      - if: ${{ startsWith(matrix.os, 'ubuntu') && matrix.deno == 'canary' }}
+      - if: ${{ matrix.os == 'ubuntu-latest' }}
         name: 👩‍⚕️ Lint
         run: deno lint
       - name: 🩺 Typecheck
         run: deno task typecheck
-        shell: bash
       - name: ✅ Unittest
         run: deno task test
-        shell: bash
       - name: 📝 Docs
         run: deno task test:docs
-        shell: bash
   publish:
     needs: test
     runs-on: ubuntu-latest
@@ -64,7 +62,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ env.DENO_DIR }}
-          key: ${{ join([hashFiles('lock.json'), '-', 'v1.x', '-', 'ubuntu-latest'], '') }}
+          key: ${{ hashFiles('lock.json') }}-v1.x-ubuntu-latest
       - uses: denoland/setup-deno@v1.0.0
         with:
           deno-version: v1.x

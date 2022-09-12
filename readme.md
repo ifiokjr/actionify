@@ -6,9 +6,9 @@
 
 ## Why?
 
-Continuous integration (CI) is an essential safety net for any sustainable open source project. GitHub Actions have become the industry standard. Unfortunately they use `.yml` files which are error prone and make reuse difficult.
+Continuous integration (CI) is an essential safety net for any sustainable open source project. GitHub Actions have become the industry standard. One downside is the **yaml** configuration format. `.yml` files can be error-prone and make reuse more difficult.
 
-I decided to create this project after implement a rust build pipeline for a `rust` / `napi` project which builds across multiple platforms. The `.yml` files were getting very long and hard to maintain. By using this tool I've been able to reduce the complexity massively and allow for much simpler reuse of code.
+I decided to create this project after implementing a rust build pipeline for a `rust` / `napi` project which needed to be compiled across multiple architectures. The `.yml` files were complex and hard to maintain. By using this tool I've been able to reduce the complexity massively and allow for much simpler reuse of code.
 
 <br />
 
@@ -18,7 +18,7 @@ This project requires a recent [installation](https://deno.land/manual@v1.25.2/g
 
 There are two ways of running this project:
 
-##### 1. Install globally
+#### 1. Install globally
 
 ```bash
 deno install -Af --name actionify https://deno.land/x/actionify/cli.ts
@@ -32,7 +32,7 @@ actionify --help # Prints the help menu
 actionify check # Checks whether workflows are up to date and valid
 ```
 
-##### 2. Run with `deno`
+#### 2. Run with `deno`
 
 ```bash
 deno run -Ar https://deno.land/x/actionify/cli.ts
@@ -107,13 +107,13 @@ function generateSteps() {
 
 Once the above example is in place, you can run the following to generate all the workflow files.
 
-##### With global installation
+#### With global installation
 
 ```bash
 actionify
 ```
 
-##### With `deno run`
+#### With `deno run`
 
 ```bash
 deno run -Ar https://deno.land/x/actionify/cli.ts

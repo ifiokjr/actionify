@@ -274,20 +274,19 @@ export function join(
   return expression.add(")").cast<string>();
 }
 
+/**
+ * Concat a list of expressions and strings into usesable output.
+ */
 export function concat(
   first: ExpressionContent,
   second: ExpressionContent,
   ...rest: Array<ExpressionContent>
 ) {
-  const expression = Expression.create("join([", str(first), ", ", str(second));
+  const all = [first, second, ...rest];
 
-  if (rest.length > 0) {
-    for (const item of rest) {
-      expression.add(", ", str(item));
-    }
-  }
-
-  return expression.add("], '')").cast<string>();
+  return all.map((item) =>
+    typeof item === "string" ? item : Expression.create(item).wrap()
+  ).join("");
 }
 
 export function toJSON(value: ExpressionContent) {
