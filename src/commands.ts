@@ -265,20 +265,70 @@ export function group<Commands extends AnyCommand>(
  * subsequent steps in a job will have access. The names of environment
  * variables are case-sensitive, and you can include punctuation.
  *
- * ```ts
- * import { commands, Step } from "https://deno.land/x/actionify/mod.ts";
+ * Once an environment variable is added in this way it can be removed by
+ * setting it to the empty string.
  *
- * const step = Step
- *   .create()
- *   .run(commands.setEnv(
+ * ```ts
+ * import { commands, step } from "https://deno.land/x/actionify@0.0.0/mod.ts";
+ *
+ * const addStep = step()
+ *   .run(commands.exportVariable(
  *     "AWESOME_ENV",
  *     "this is the env",
  *   ));
+ *
+ * // Set the variable to an empty string.
+ * const removeStep = step()
+ *   .run(commands.exportVariable("AWESOME_ENV", ""));
  * ```
+ *
+ * If `isDynamic` is set to `true` the provided value is not wrapped in quotes
+ * and will be run as an expression.
  */
-export function setEnv<Env extends string>(
+export function exportVariable<Env extends string>(
   name: Env,
   value: ExpressionValue,
+  isDynamic = false,
 ): Command<{ env: Env; output: never }> {
-  return Command.create(`echo "${name}=${value}" >> $GITHUB_ENV`);
+  const quotes = isDynamic ? "" : '"';
+  return Command.create(
+    `echo ${quotes}${name}=${value}${quotes} >> $GITHUB_ENV`,
+  );
+}
+
+/**
+ * If `isDynamic` is set to `true` the provided value is not wrapped in quotes
+ * and will be run as an expression.
+ */
+export function setMultilineEnv<Env extends string>(
+  name: Env,
+  value: ExpressionValue,
+  isDynamic = false,
+) {
+  const random = getRandomValue("ENV");
+  const quotes = isDynamic ? "" : '"';
+  return Command.create(
+    `echo "${name}<<${random}" >> $GITHUB_ENV\necho ${quotes}${value}${quotes} >> $GITHUB_ENV\necho "${random}" >> $GITHUB_ENV`,
+  );
+}
+
+function getRandomValue(prefix = "") {
+  return `${prefix}${crypto.randomUUID().split("-").join("").slice(0, 10)}`;
+}
+
+/**
+ * Prepends a directory to the system PATH variable and automatically makes it
+ * available to all subsequent actions in the current job; the currently running
+ * action cannot access the updated path variable. To see the currently defined
+ * paths for your job, you can use echo "$PATH" in a step or an action.
+ *
+ * ```ts
+ * import { commands, step } from "https://deno.land/x/actionify@0.0.0/mod.ts";
+ *
+ * const pathStep = step()
+ *   .run(commands.addPath("$HOME/.local/bin"));
+ * ```
+ */
+export function addPath(path: ExpressionValue) {
+  return Command.create(`echo "${path}" >> $GITHUB_PATH`);
 }

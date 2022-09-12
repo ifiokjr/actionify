@@ -7,12 +7,12 @@ import {
   Shell,
   step,
   workflow,
-} from "https://deno.land/x/actionify/mod.ts";
+} from "https://deno.land/x/actionify@0.0.0/mod.ts";
 
-const deno = ["v1.24.x", "v1.x", "canary"];
+const deno = ["v1.23.x", "v1.24.x", "v1.x", "canary"];
 const os = [Runner.MacOSLatest, Runner.UbuntuLatest];
 const envStep = step().name("Set environment").run((ctx) =>
-  commands.setEnv("DENO_DIR", e.concat(ctx.runner.temp, "/deno_cache"))
+  commands.exportVariable("DENO_DIR", e.concat(ctx.runner.temp, "/deno_cache"))
 );
 
 const testJob = job()
@@ -94,7 +94,10 @@ function sharedSteps(withMatrix = true) {
       .with((ctx) => ({
         "deno-version": withMatrix ? e.expr(ctx.matrix.deno) : "v1.x",
       })),
-    step().name("🔒 Lock").run("deno task lock").shell(Shell.Bash)
+    step()
+      .name("🔒 Lock")
+      .run("deno task lock")
+      .shell(Shell.Bash)
       .continueOnError(),
   ] as const;
 }

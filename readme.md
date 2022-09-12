@@ -40,6 +40,29 @@ deno run -Ar https://deno.land/x/actionify/cli.ts
 
 <br />
 
+## VSCode Setup
+
+If you are using `vscode` you can install the [deno extension](https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno) which will provide you with syntax highlighting and autocompletion.
+
+Enabling `deno` for the whole project may cause interoperability issues if you are using a default TypeScript setup. The best way to get around this is to create a `.vscode/settings.json` file in the root of your project and add the following:
+
+```json
+{
+  "deno.enablePaths": [".github/"]
+}
+```
+
+This restricts `deno` support to the `.github` folder and will fix most of the conflicts. Depending on your TypeScript setup you may also need to **exclude** the `.github` folder via your `tsconfig.json` file.
+
+```jsonc
+{
+  "compilerOptions": {
+    // ...
+  },
+  "exclude": [".github/**"]
+}
+```
+
 ## Usage
 
 The following setup uses the defaults. These can be customised as documented later in this readme.

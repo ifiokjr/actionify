@@ -17,6 +17,8 @@ const releaseTypes = [
   "prerelease",
 ] as const;
 
+let status = 0;
+
 try {
   const imports: Record<string, string> = {
     ...Object.fromEntries(
@@ -52,7 +54,7 @@ try {
 
   await Deno.writeTextFile(importMapPath, JSON.stringify(importMap));
 
-  await Deno
+  const result = await Deno
     .run({
       cmd: [
         "deno",
@@ -65,6 +67,10 @@ try {
       ],
       cwd,
     }).status();
+
+  status = result.code;
 } finally {
   await Deno.remove(importMapPath);
 }
+
+Deno.exit(status);
