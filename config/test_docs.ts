@@ -20,9 +20,9 @@ const releaseTypes = [
 try {
   const imports: Record<string, string> = {
     ...Object.fromEntries(
-      Object.entries(mainImportMap.imports).filter(([_, path]) =>
-        !path.startsWith("./")
-      ),
+      Object.entries(mainImportMap.imports).map((
+        [key, path],
+      ) => [key, path.startsWith("./") ? path.replace(/^\.\//, "../") : path]),
     ),
     "https://deno.land/x/actionify@<%=it.version%>/": cwd,
     "https://deno.land/x/actionify/": cwd,

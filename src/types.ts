@@ -814,7 +814,8 @@ export interface DefaultEnv {
 export type GitHubData<
   Base extends ActionTemplate,
   Event extends keyof WorkflowEvents = NonNullable<Base["events"]>,
-> = Event extends string ? GitHubContextItem<Event> : never;
+> = Event extends string ? GitHubContextItem<Event>
+  : GitHubContextItem<keyof WorkflowEvents>;
 
 export interface GitHubContextItem<Event extends keyof WorkflowEvents> {
   /**
