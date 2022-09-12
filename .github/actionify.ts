@@ -1,48 +1,22 @@
 import {
   defineWorkflows,
   e,
-  Job,
+  job,
   Runner,
   Shell,
-  Step,
-  Workflow,
+  step,
+  workflow,
 } from "https://deno.land/x/actionify/mod.ts";
-
-function sharedSteps(withMatrix = true) {
-  return [
-    Step.create().name("🏴‍☠️ Checkout").uses("actions/checkout@v3"),
-    Step
-      .create<{ matrix: "deno" | "os"; env: "DENO_DIR" }>()
-      .name("📦 Cache")
-      .uses("actions/cache@v3")
-      .with((ctx) => ({
-        path: e.expr(ctx.env.DENO_DIR),
-        key: e.concat(
-          e.hashFiles("lock.json"),
-          "-",
-          withMatrix ? ctx.matrix.deno : "v1.x",
-          "-",
-          withMatrix ? ctx.matrix.os : Runner.UbuntuLatest,
-        ),
-      })),
-    Step
-      .create<{ matrix: "deno" }>()
-      .uses("denoland/setup-deno@v1.0.0")
-      .with((ctx) => ({
-        "deno-version": withMatrix ? e.expr(ctx.matrix.deno) : "v1.x",
-      })),
-    Step.create().name("🔒 Lock").run("deno task lock").shell(Shell.Bash),
-  ] as const;
-}
 
 const deno = ["v1.24.x", "v1.x", "canary"];
 const os = [Runner.MacOSLatest, Runner.UbuntuLatest];
+const env = { DENO_DIR: e.concat(e.ctx.runner.temp, "/deno_cache") };
 
-const testJob = Job
-  .create()
+const testJob = job()
   .strategy({ matrix: { deno, os } })
   .timeoutMinutes(5)
   .runsOn((ctx) => e.expr(ctx.matrix.os))
+  .env(env)
   .steps(sharedSteps())
   .step((step) => {
     return step
@@ -72,11 +46,11 @@ const testJob = Job
       .run("deno task test:docs");
   });
 
-const publishJob = Job
-  .create<{ jobs: "test" }>()
+const publishJob = job<{ jobs: "test" }>()
   .needs("test")
   .timeoutMinutes(5)
   .runsOn(Runner.UbuntuLatest)
+  .env(env)
   .steps(sharedSteps(false))
   .step((step) => {
     return step
@@ -85,11 +59,9 @@ const publishJob = Job
       .run("deno task publish");
   });
 
-const ciWorkflow = Workflow
-  .create({ name: "ci" })
+const ciWorkflow = workflow({ name: "ci" })
   .on("push", { branches: ["main"] })
   .on("pull_request", { branches: ["main"] })
-  .env({ DENO_DIR: e.concat(e.ctx.env.RUNNER_TEMP, "/deno_cache") })
   .job("test", testJob)
   .job("publish", publishJob);
 
@@ -97,3 +69,28 @@ export default defineWorkflows({
   workflows: [ciWorkflow],
   cleanupRoot: true,
 });
+
+function sharedSteps(withMatrix = true) {
+  return [
+    step().name("🏴‍☠️ Checkout").uses("actions/checkout@v3"),
+    step<{ matrix: "deno" | "os"; env: "DENO_DIR" }>()
+      .name("📦 Cache")
+      .uses("actions/cache@v3")
+      .with((ctx) => ({
+        path: e.expr(ctx.env.DENO_DIR),
+        key: e.concat(
+          e.hashFiles("lock.json"),
+          "-",
+          withMatrix ? ctx.matrix.deno : "v1.x",
+          "-",
+          withMatrix ? ctx.matrix.os : Runner.UbuntuLatest,
+        ),
+      })),
+    step<{ matrix: "deno" }>()
+      .uses("denoland/setup-deno@v1.0.0")
+      .with((ctx) => ({
+        "deno-version": withMatrix ? e.expr(ctx.matrix.deno) : "v1.x",
+      })),
+    step().name("🔒 Lock").run("deno task lock").shell(Shell.Bash),
+  ] as const;
+}

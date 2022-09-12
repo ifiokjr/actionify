@@ -10,11 +10,11 @@ name: ci
   pull_request:
     branches:
       - main
-env:
-  DENO_DIR: ${{ env.RUNNER_TEMP }}/deno_cache
 jobs:
   test:
     runs-on: ${{ matrix.os }}
+    env:
+      DENO_DIR: ${{ runner.temp }}/deno_cache
     timeout-minutes: 5
     strategy:
       matrix:
@@ -54,6 +54,8 @@ jobs:
   publish:
     needs: test
     runs-on: ubuntu-latest
+    env:
+      DENO_DIR: ${{ runner.temp }}/deno_cache
     timeout-minutes: 5
     steps:
       - name: 🏴‍☠️ Checkout

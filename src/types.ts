@@ -151,7 +151,7 @@ export interface ActionData<
    * Information about the runner that is running the current job. For more
    * information, see runner context.
    */
-  runner: RunnerData;
+  runner: Base["inJob"] extends true ? RunnerData : never;
 
   /**
    * Contains the names and values of secrets that are available to a workflow

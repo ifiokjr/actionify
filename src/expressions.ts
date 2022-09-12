@@ -1,5 +1,5 @@
 import { Context, proxy } from "./context.ts";
-import { ActionData, ActionTemplate, BaseContext } from "./types.ts";
+import { ActionData, ActionTemplate, BaseContext, WithStep } from "./types.ts";
 
 /**
  * An expression which is evaluated within the github action context.
@@ -353,9 +353,11 @@ export function context<
 }
 
 /**
- * Default context settings.
+ * Default context settings that work in all contexts.
+ *
+ * This doesn't guarantee type safety.
  */
-export const ctx = context();
+export const ctx = context<WithStep<ActionTemplate>>();
 
 export type Contextify<Data> = {
   [Key in keyof Data]: Context<Data[Key]>;
