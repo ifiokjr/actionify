@@ -2,6 +2,22 @@
 
 > Create TypeSafe GitHub actions.
 
+- [actionify](#actionify)
+  - [Why?](#why)
+  - [Installation](#installation)
+    - [1. Install globally](#1-install-globally)
+    - [2. Run with `deno`](#2-run-with-deno)
+  - [VSCode Setup](#vscode-setup)
+  - [Usage](#usage)
+    - [With global installation](#with-global-installation)
+    - [With `deno run`](#with-deno-run)
+  - [Roadmap](#roadmap)
+    - [Better error handling](#better-error-handling)
+    - [Community feedback on TypeScript API](#community-feedback-on-typescript-api)
+    - [Remote Actions](#remote-actions)
+    - [Support deno scripting](#support-deno-scripting)
+  - [Contributing](#contributing)
+
 <br />
 
 ## Why?

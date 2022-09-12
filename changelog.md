@@ -14,17 +14,23 @@
 - Currently the project is focused on making it easier to create github workflows that are fully typed and easy to reuse.
 
 ```bash
-Usage:   actionify [config]
-  Version: undefined  (New version available: null. Run 'actionify upgrade' to upgrade to the latest version!)
+Usage:   actionify
+Version: 0.1.0
 
-  Options:
+Description:
 
-    -h, --help              - Show this help.
-    -o, --output  [output]  - The path to the output defaults to <CWD>/.github/workflows  (Default: "./.github/workflows")
+  Generate reusable GitHub Action workflow files with TypeScript.
 
-  Commands:
+Options:
 
-    upgrade                 - Upgrade actionify executable to latest or given version.
-    help         [command]  - Show this help or the help of a sub-command.
-    completions             - Generate shell completions.
+  -h, --help               - Show this help.
+  -V, --version            - Show the version number for this program.
+  -c, --config   [config]  - The path to the TypeScript configuration file                           (Default: "./.github/actionify.ts")
+  -o, --output   [output]  - The path to the folder containing the generated workflow `.yml` files.  (Default: "./.github/workflows")
+
+Commands:
+
+  upgrade                 - Upgrade actionify executable to latest or given version.
+  help         [command]  - Show this help or the help of a sub-command.
+  completions             - Generate shell completions.
 ```
