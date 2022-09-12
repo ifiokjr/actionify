@@ -1,5 +1,5 @@
-import { globber } from "./deps.ts";
-import { getLogger, parse } from "./deps.ts";
+import * as path from "../src/deps/path.ts";
+import { getLogger, globber, parse } from "./deps.ts";
 import { cwd } from "./helpers.ts";
 
 const decoder = new TextDecoder();
@@ -8,7 +8,7 @@ const deps: string[] = [];
 const args = parse(Deno.args, { boolean: ["reload"] });
 const entries = globber({
   cwd,
-  include: ["**/deps.ts", "**/deps/*.ts"],
+  include: ["**/deps.ts", "**/deps/*.ts", "import_map.json"],
   excludeDirectories: true,
 });
 
@@ -16,11 +16,19 @@ for await (const entry of entries) {
   deps.push(entry.relative);
 }
 
+const baseCommand = [
+  "deno",
+  "cache",
+  "--lock=lock.json",
+  "--import-map=import_map.json",
+  "--reload",
+];
+
 async function update() {
   log.info("Updating the `lock.json` file.");
 
   await Deno.run({
-    cmd: ["deno", "cache", "--lock=lock.json", "--lock-write", ...deps],
+    cmd: [...baseCommand, "--lock-write", ...deps],
     stdout: "piped",
     cwd: cwd.pathname,
   }).output();
@@ -30,15 +38,14 @@ async function load() {
   log.info("Loading the cache from `lock.json`.");
 
   const command = Deno.run({
-    cmd: ["deno", "cache", "--lock=lock.json", "--reload", ...deps],
-    stdout: "piped",
+    cmd: [...baseCommand, ...deps],
+    stdout: "inherit",
     stderr: "piped",
     cwd: cwd.pathname,
   });
 
-  const [status, _, stderr] = await Promise.all([
+  const [status, stderr] = await Promise.all([
     command.status(),
-    command.output(),
     command.stderrOutput(),
   ]);
   command.close();

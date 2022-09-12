@@ -90,7 +90,7 @@ function sharedSteps(withMatrix = true) {
         ),
       })),
     step<{ matrix: "deno" }>()
-      .uses("denoland/setup-deno@v1.0.0")
+      .uses("denoland/setup-deno@v1")
       .with((ctx) => ({
         "deno-version": withMatrix ? e.expr(ctx.matrix.deno) : "v1.x",
       })),
