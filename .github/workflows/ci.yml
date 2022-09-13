@@ -46,11 +46,13 @@ jobs:
       - if: ${{ matrix.os == 'ubuntu-latest' }}
         name: 👩‍⚕️ Lint
         run: deno lint
-      - name: 🩺 Typecheck
+      - if: ${{ matrix.os == 'ubuntu-latest' }}
+        name: 🩺 Typecheck
         run: deno task typecheck
       - name: ✅ Unittest
         run: deno task test
-      - name: 📝 Docs
+      - if: ${{ matrix.os == 'ubuntu-latest' }}
+        name: 📝 Docs
         run: deno task test:docs
   publish:
     needs: test

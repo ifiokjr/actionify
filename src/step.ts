@@ -1,7 +1,8 @@
 import type { AnyCommand, Command } from "./commands.ts";
 import { isArray } from "./deps/just.ts";
 import { StringKeyOf } from "./deps/types.ts";
-import type { ExpressionValue, WithContext } from "./expressions.ts";
+import { ActionifyError } from "./errors.ts";
+import type { ExpressionValue } from "./expressions.ts";
 import type {
   ActionTemplate,
   CombineAsUnion,
@@ -9,8 +10,9 @@ import type {
   HasActionTemplate,
   Listed,
   LiteralString,
+  ReplaceMethods,
   Shell,
-  WithStep,
+  WithContext,
 } from "./types.ts";
 import { getFromContext } from "./utils.ts";
 
@@ -19,15 +21,15 @@ import { getFromContext } from "./utils.ts";
  */
 export function step<
   Base extends ActionTemplate = { stepId: never },
->(): Step<WithStep<Base>> {
+>(): Step<Base> {
   return Step.create();
 }
 
-export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
+export class Step<Base extends ActionTemplate = ActionTemplate>
   implements HasActionTemplate<Base> {
   static create<
     Base extends ActionTemplate = { stepId: never },
-  >(): Step<WithStep<Base>> {
+  >(): Step<Base> {
     return new Step();
   }
 
@@ -57,8 +59,7 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
    */
   id<Id extends string>(id: Id): Step<CombineAsUnion<Base | { stepId: Id }>> {
     this.#id = id;
-    // @ts-expect-error This type would be very difficult to infer due to the
-    // builder pattern.
+    // @ts-expect-error The builder pattern makes this difficult to infer
     return this;
   }
 
@@ -141,7 +142,7 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
    *   );
    * ```
    */
-  if(statement: WithContext<ExpressionValue, Base>) {
+  if(statement: WithContext<ExpressionValue, Base, "jobs:jobId:steps:if">) {
     this.#if = getFromContext(statement);
     return this;
   }
@@ -149,7 +150,9 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
   /**
    * A name for the step to display in the GitHub UI.
    */
-  name(name: WithContext<ExpressionValue<string>, Base>) {
+  name(
+    name: WithContext<ExpressionValue<string>, Base, "jobs:jobId:steps:name">,
+  ) {
     this.#name = getFromContext(name);
     return this;
   }
@@ -223,14 +226,13 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
    * ```
    */
   run<Type extends AnyCommand>(
-    run: WithContext<Listed<Type | string>, Base>,
+    run: WithContext<Listed<Type | string>, Base, "jobs:jobId:steps:run">,
   ): Step<CombineAsUnion<Base | ExtractCommand<Type>>> {
     const value = getFromContext(run);
     this.#run = (isArray(value) ? value : [value])
       .map((command) => `${command}`)
       .join("\n");
-    // @ts-expect-error This type would be very difficult to infer due to the
-    // builder pattern.
+    // @ts-expect-error The builder pattern makes this difficult to infer
     return this;
   }
 
@@ -250,8 +252,8 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
    *   .shell('bash');
    * ```
    */
-  shell(shell: WithContext<LiteralString | `${Shell}`, Base>) {
-    this.#shell = getFromContext(shell);
+  shell(shell: LiteralString | `${Shell}`) {
+    this.#shell = shell;
     return this;
   }
 
@@ -268,7 +270,13 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
    *   .workingDirectory('./tmp');
    * ```
    */
-  workingDirectory(workingDirectory?: WithContext<ExpressionValue, Base>) {
+  workingDirectory(
+    workingDirectory?: WithContext<
+      ExpressionValue,
+      Base,
+      "jobs:jobId:steps:workingDirectory"
+    >,
+  ) {
     this.#workingDirectory = getFromContext(workingDirectory);
     return this;
   }
@@ -278,7 +286,7 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
    * is a key/value pair. Input parameters are set as environment variables. The
    * variable is prefixed with INPUT_ and converted to upper case.
    */
-  with(props: WithContext<WithProps, Base>) {
+  with(props: WithContext<WithProps, Base, "jobs:jobId:steps:with">) {
     this.#with = getFromContext(props);
     return this;
   }
@@ -301,11 +309,10 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
    * environment variables" and "Contexts."
    */
   env<Env extends EnvProps>(
-    env: WithContext<Env, Base>,
+    env: WithContext<Env, Base, "jobs:jobId:steps:env">,
   ): Step<CombineAsUnion<Base | { env: StringKeyOf<Env> }>> {
     this.#env = getFromContext(env);
-    // @ts-expect-error This type would be very difficult to infer due to the
-    // builder pattern.
+    // @ts-expect-error The builder pattern makes this difficult to infer
     return this;
   }
 
@@ -315,7 +322,13 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
    *
    * Calling with no arguments will set the value to `true`.
    */
-  continueOnError(continueOnError: WithContext<ExpressionValue, Base> = true) {
+  continueOnError(
+    continueOnError: WithContext<
+      ExpressionValue,
+      Base,
+      "jobs:jobId:continueOnError"
+    > = true,
+  ) {
     this.#continueOnError = getFromContext(continueOnError);
     return this;
   }
@@ -323,7 +336,13 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
   /**
    * The maximum number of minutes to run the step before killing the process.
    */
-  timeoutMinutes(minutes: WithContext<ExpressionValue<number>, Base>) {
+  timeoutMinutes(
+    minutes: WithContext<
+      ExpressionValue<number>,
+      Base,
+      "jobs:jobId:steps:timeoutMinutes"
+    >,
+  ) {
     this.#timeoutMinutes = getFromContext(minutes);
     return this;
   }
@@ -342,6 +361,14 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
   toJSON() {
     const json = Object.create(null);
 
+    if (!this.#uses && !this.#run) {
+      throw new ActionifyError(
+        `Missing property for Step '${
+          this.#name ?? this.#id
+        }' which must have either a 'uses' or 'run' property.`,
+      );
+    }
+
     json.if = this.#if;
     json.id = this.#id;
     json.name = this.#name;
@@ -358,7 +385,7 @@ export class Step<Base extends ActionTemplate = WithStep<ActionTemplate>>
   }
 }
 
-export type AnyStep = Step<any>;
+export type AnyStep = ReplaceMethods<Step<any>>;
 // export type ExtractCommand<Type> =
 //   | GetOutputs<Type>
 //   | GetJobEnv<Type>;

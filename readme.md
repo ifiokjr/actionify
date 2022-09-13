@@ -223,27 +223,21 @@ import actionsCheckout from "https://act.deno.dev/actions/checkout";
 import {
   defineWorkflows,
   e,
-  job,
   workflow,
 } from "https://deno.land/x/actionify@0.1.0/mod.ts";
 
+const checkoutStep = actionsCheckout((ctx) => ({
+  repository: e.wrap(ctx.github.repository),
+  ref: e.wrap(ctx.github.ref),
+  token: e.wrap(ctx.github.token),
+  lfs: true,
+})).env((ctx) => ({
+  GITHUB_TOKEN: e.wrap(ctx.secrets.GITHUB_TOKEN),
+}));
+
 const ci = workflow({ name: "ci" })
   .on("push")
-  .job(
-    "Explore-GitHub-Actions",
-    job()
-      .step((_, ctx) => {
-        return actionsCheckout({
-          repository: e.wrap(ctx.github.repository),
-          ref: e.wrap(ctx.github.ref),
-          token: e.wrap(ctx.github.token),
-          lfs: true,
-        })
-          .env({
-            GITHUB_TOKEN: e.wrap(ctx.secrets.GITHUB_TOKEN),
-          });
-      }),
-  );
+  .job("Explore-GitHub-Actions", (job) => job.step(checkoutStep));
 
 export default defineWorkflows({
   workflows: [ci],

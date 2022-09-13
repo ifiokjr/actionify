@@ -8,7 +8,10 @@ import {
 const ciWorkflow = workflow({ name: "GitHub Actions Demo", fileName: "ci" })
   .on("push")
   .job("Explore-GitHub-Actions", (job) => {
-    return job.steps(generateSteps());
+    return job
+      .name("Explore Github Actions")
+      .runsOn("ubuntu-latest")
+      .steps(generateSteps());
   });
 
 export default defineWorkflows({

@@ -1,26 +1,22 @@
 import { isEmpty, isFunction, kebabCase } from "./deps/just.ts";
 import type { StringKeyOf } from "./deps/types.ts";
-import {
-  context,
-  Contextify,
-  ExpressionValue,
-  WithContext,
-} from "./expressions.ts";
+import { ActionifyError } from "./errors.ts";
+import { ExpressionValue } from "./expressions.ts";
 import { AnyJob, ConcurrentOptions, Job } from "./job.ts";
 import type {
-  ActionData,
   ActionTemplate,
   CombineAsUnion,
-  DefaultsProp,
   EnvProps,
   GetEventOptions,
   GetTemplate,
   HasActionTemplate,
   InputKeys,
   JobOutputKey,
+  SecretKeys,
   SetPermissions,
-  WithJob,
+  WithContext,
   WorkflowCallOptions,
+  WorkflowDefaultsProps,
   WorkflowDispatchOptions,
   WorkflowEvents,
   WorkflowRunOptions,
@@ -81,12 +77,13 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
   #on = Object.create(null);
   #permissions?: SetPermissions | undefined;
   #env: Record<string, ExpressionValue<string>> | undefined;
-  #defaults: DefaultsProp | undefined;
+  #defaults: WorkflowDefaultsProps | undefined;
   #concurrency?: ConcurrentOptions | undefined;
   #jobs: Record<string, AnyJob> = Object.create(null);
 
   private constructor(props: CreateWorkflowProps) {
-    const { name, fileName = kebabCase(name) } = props;
+    const { name, fileName = kebabCase(name.replace(/\.(?:yaml|yml)$/g, "")) } =
+      props;
 
     this.name = name;
     this.fileName = fileName;
@@ -108,10 +105,9 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * made to any branch in the workflow's repository:
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .on('push');
    * ```
    *
@@ -122,10 +118,9 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * the repository or when someone forks the repository:
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .on('push')
    *   .on('fork');
    * ```
@@ -136,37 +131,48 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    *
    * #### Using activity types
    *
-   * Some events have activity types that give you more control over when your workflow should run. Use on.<event_name>.types to define the type of event activity that will trigger a workflow run.
+   * Some events have activity types that give you more control over when your
+   * workflow should run. Use on.<event_name>.types to define the type of event
+   * activity that will trigger a workflow run.
    *
-   * For example, the issue_comment event has the created, edited, and deleted activity types. If your workflow triggers on the label event, it will run whenever a label is created, edited, or deleted. If you specify the created activity type for the label event, your workflow will run when a label is created but not when a label is edited or deleted.
+   * For example, the issue_comment event has the created, edited, and deleted
+   * activity types. If your workflow triggers on the label event, it will run
+   * whenever a label is created, edited, or deleted. If you specify the created
+   * activity type for the label event, your workflow will run when a label is
+   * created but not when a label is edited or deleted.
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .on('push')
    *   .on('label', { types: ['created'] });
    * ```
    *
-   * If you specify multiple activity types, only one of those event activity types needs to occur to trigger your workflow. If multiple triggering event activity types for your workflow occur at the same time, multiple workflow runs will be triggered. For example, the following workflow triggers when an issue is opened or labeled. If an issue with two labels is opened, three workflow runs will start: one for the issue opened event and two for the two issue labeled events.
+   * If you specify multiple activity types, only one of those event activity
+   * types needs to occur to trigger your workflow. If multiple triggering event
+   * activity types for your workflow occur at the same time, multiple workflow
+   * runs will be triggered. For example, the following workflow triggers when
+   * an issue is opened or labeled. If an issue with two labels is opened, three
+   * workflow runs will start: one for the issue opened event and two for the
+   * two issue labeled events.
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .on('push')
    *   .on('pull_request', { types: ['opened', 'labeled'] });
    * ```
    *
-   * For more information about each event and their activity types, see "Events that trigger workflows."
+   * For more information about each event and their activity types, see "Events
+   * that trigger workflows."
    */
   // @ts-expect-error This type would be very difficult to infer due to the
   // builder pattern.
   on<Options extends WorkflowDispatchOptions>(
     event: "workflow_dispatch",
-    options: WithContext<Options, Base>,
+    options: Options,
   ): Workflow<
     CombineAsUnion<
       | Base
@@ -176,12 +182,21 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
   >;
   on<Options extends WorkflowCallOptions>(
     event: "workflow_call",
-    options: WithContext<Options, Base>,
+    options: WithContext<
+      Options,
+      Base,
+      | "on:workflow_call:inputs:inputsId:default"
+      | "on:workflow_call:outputs:outputId:value"
+    >,
   ): Workflow<
     CombineAsUnion<
       | Base
-      | { events: "workflow_call"; secrets: StringKeyOf<Options["secrets"]> }
+      | {
+        events: "workflow_call";
+        outputs: StringKeyOf<Options["outputs"]>;
+      }
       | InputKeys<NonNullable<Options["inputs"]>>
+      | SecretKeys<NonNullable<Options["secrets"]>>
     >
   >;
   on<
@@ -191,7 +206,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
     >,
   >(
     event: Event,
-    ...[options]: GetEventOptions<Event, Base | { events: Event }>
+    ...[options]: GetEventOptions<Event>
   ): Workflow<CombineAsUnion<Base | { events: Event }>>;
   on(event: string, options: object | undefined) {
     const optionsObject = getFromContext(options);
@@ -223,15 +238,16 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    *
    * Each property can have a value of `read`, `write` or `none`.
    *
-   * If you specify the access for any of these scopes, all of those that are not specified are set to none.
+   * If you specify the access for any of these scopes, all of those that are
+   * not specified are set to none.
    *
-   * You can use the following syntax to define read or write access for all of the available scopes:
+   * You can use the following syntax to define read or write access for all of
+   * the available scopes:
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .on('push')
    *   .permissions('write-all') // => `read-all` for read access
    * ```
@@ -239,10 +255,9 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * To disable permissions for all available scopes use the following:
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .permissions(false)
    * ```
    */
@@ -273,28 +288,26 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * job executes.
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .on('push')
    *   .env({ SERVER: 'production' });
    * ```
    */
   env<Env extends EnvProps>(
-    env: WithContext<Env, Base>,
+    env: WithContext<Env, Base, "env">,
   ): Workflow<CombineAsUnion<Base | { env: StringKeyOf<Env> }>> {
     this.#env = getFromContext(env);
-    // @ts-expect-error This type would be very difficult to infer due to the
-    // builder pattern.
+    // @ts-expect-error The builder pattern makes this difficult to infer
     return this;
   }
 
   /**
    * Use `defaults` to create a `map` of default settings that will apply to all
    * jobs in the workflow. You can also set default settings that are only
-   * available to a job. For more
-   * information,see [`jobs.<job_id>.defaults`](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_iddefaults).
+   * available to a job. For more information,see
+   * [`jobs.<job_id>.defaults`](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_iddefaults).
    *
    * When more than one default setting is defined with the same name, GitHub
    * uses the most specific default setting. For example, a default setting
@@ -303,22 +316,28 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    *
    * ### `defaults.run`
    *
-   * You can use defaults.run to provide default shell and working-directory options for all run steps in a workflow. You can also set default settings for run that are only available to a job. For more information, see jobs.<job_id>.defaults.run. You cannot use contexts or expressions in this keyword.
+   * You can use defaults.run to provide default shell and working-directory
+   * options for all run steps in a workflow. You can also set default settings
+   * for run that are only available to a job. For more information, see
+   * jobs.<job_id>.defaults.run. You cannot use contexts or expressions in this
+   * keyword.
    *
-   * When more than one default setting is defined with the same name, GitHub uses the most specific default setting. For example, a default setting defined in a job will override a default setting that has the same name defined in a workflow.
+   * When more than one default setting is defined with the same name, GitHub
+   * uses the most specific default setting. For example, a default setting
+   * defined in a job will override a default setting that has the same name
+   * defined in a workflow.
    *
    * ##### Set the default shell and working directory
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .on('push')
    *   .defaults({ run: { shell: 'bash', 'working-directory': 'scripts' }})
    * ```
    */
-  defaults(props: DefaultsProp) {
+  defaults(props: WorkflowDefaultsProps) {
     this.#defaults = getFromContext(props);
     return this;
   }
@@ -342,10 +361,9 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * ##### Using concurrency and the default behavior
    *
    * ```ts
-   * import { Workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .on('push')
    *   .concurrency(ctx => e.concat('ci-', ctx.github.ref)); // => `${{ join(['ci-', github.ref], '') }}`
    * ```
@@ -353,10 +371,9 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * ##### Using concurrency to cancel any in-progress job or run
    *
    * ```ts
-   * import { Workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .on('push')
    *   .concurrency(ctx => ({
    *     group: e.expr(ctx.github.ref),
@@ -376,10 +393,9 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * guaranteed to be both unique and defined for the run.
    *
    * ```ts
-   * import { Workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .on('push')
    *   .concurrency(ctx => ({
    *     group: e.op(ctx.github.ref, '||', ctx.github.run_id),
@@ -398,10 +414,9 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * github.workflow property to build the concurrency group:
    *
    * ```ts
-   * import { Workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .on('push')
    *   .concurrency(ctx => ({
    *     group: e.op(ctx.github.ref, '||', ctx.github.run_id),
@@ -409,7 +424,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    *   }));
    * ```
    */
-  concurrency(options: WithContext<ConcurrentOptions, Base>) {
+  concurrency(options: WithContext<ConcurrentOptions, Base, "concurrency">) {
     this.#concurrency = getFromContext(options);
     return this;
   }
@@ -425,9 +440,8 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
       Base | { jobs: Id } | JobOutputKey<Id, GetJobOutputs<OutputJob>>
     >
   > {
-    this.#jobs[id] = isFunction(job) ? job(Job.create(), context()) : job;
-    // @ts-expect-error This type would be very difficult to infer due to the
-    // builder pattern.
+    this.#jobs[id] = isFunction(job) ? job(Job.create()) : job;
+    // @ts-expect-error The builder pattern makes this difficult to infer
     return this;
   }
 
@@ -441,20 +455,22 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
     jobs: Jobs,
   ): Workflow<CombineAsUnion<Base | GetJobs<Jobs>>> {
     for (const [id, job] of Object.entries(jobs)) {
-      this.#jobs[id] = isFunction(job) ? job(Job.create(), context()) : job;
+      this.#jobs[id] = isFunction(job) ? job(Job.create()) : job;
     }
 
-    // @ts-expect-error This type would be very difficult to infer due to the
-    // builder pattern.
+    // @ts-expect-error The builder pattern makes this difficult to infer
     return this;
   }
 
   toJSON() {
+    const missing: string[] = [];
     const json = Object.create(null);
     json.name = this.name;
 
     if (!isEmpty(this.#on)) {
       json.on = this.#on;
+    } else {
+      missing.push("on");
     }
 
     json.permissions = this.#permissions;
@@ -464,20 +480,29 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
 
     if (!isEmpty(this.#jobs)) {
       json.jobs = this.#jobs;
+    } else {
+      missing.push("jobs");
+    }
+
+    if (!isEmpty(missing)) {
+      throw new ActionifyError(
+        `The workflow '${this.name}' is missing the following properties: ${
+          missing.join(" and ")
+        }`,
+      );
     }
 
     return json;
   }
 }
 
+export type AnyWorkflow = Workflow<any>;
 type JobCreator<Base extends ActionTemplate, OutputJob extends AnyJob> =
-  | ((job: Job<WithJob<Base>>, ctx: Contextify<ActionData<Base>>) => OutputJob)
+  | ((job: Job<Base>) => OutputJob)
   | OutputJob;
 type GetJobOutputs<Type extends AnyJob> = unknown extends
   GetTemplate<Type>["jobOutputs"] ? never
   : GetTemplate<Type>["jobOutputs"];
-
-export type AnyWorkflow = Workflow<any>;
 
 type GetJobs<Jobs extends Record<string, JobCreator<object, AnyJob>>> = {
   [Id in StringKeyOf<Jobs>]:

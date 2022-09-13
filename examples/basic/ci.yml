@@ -26,15 +26,25 @@ defaults:
 jobs:
   a:
     name: A
+    runs-on: ubuntu-latest
     outputs:
       action: ${{ env.GITHUB_ACTION }}
+    steps:
+      - uses: some/repo
   b:
     name: B
+    runs-on: ubuntu-latest
     outputs:
       ci: ${{ env.CI }}
+    steps:
+      - uses: some/repo
   c:
-    name: ${{ matrix.os }}
+    name: ${{ needs.a.outputs.action }}
     needs: a
+    runs-on: ubuntu-latest
+    environment:
+      url: ${{ job.services.nginx.id }}
+      name: some-environment
     strategy:
       matrix:
         os:

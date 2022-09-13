@@ -1,15 +1,42 @@
-import type { WebhookEventMap } from "./deps/ocotokit.ts";
-import type { EventPayloadMap, WebhookEventName } from "./deps/ocotokit.ts";
+import { AnyFunction } from "./deps/just.ts";
+import type {
+  EventPayloadMap,
+  WebhookEventMap,
+  WebhookEventName,
+} from "./deps/octokit.ts";
 import type {
   Simplify,
   StringKeyOf,
   UnionToIntersection,
 } from "./deps/types.ts";
-import type {
-  Expression,
-  ExpressionValue,
-  WithContext,
-} from "./expressions.ts";
+import type { Contextify, Expression, ExpressionValue } from "./expressions.ts";
+
+type ContextData<
+  Base extends ActionTemplate,
+  _Picked extends keyof ContextAvailability,
+  _Data extends ActionData<Base> = ActionData<Base>,
+> =
+  // []
+  Contextify<{ [Key in ContextAvailability[_Picked]]: _Data[Key] }>;
+// Contextify<ActionData<Base>>;
+
+export type ReplaceMethods<Thing extends HasActionTemplate<any>> = {
+  [Key in keyof Thing]: Thing[Key] extends AnyFunction ? AnyFunction
+    : Thing[Key];
+};
+
+export type ContextFunction<
+  Type,
+  Base extends ActionTemplate = ActionTemplate,
+  Picked extends keyof ContextAvailability = keyof ContextAvailability,
+> = (ctx: ContextData<Base, Picked>) => Type;
+export type WithContext<
+  Type,
+  Base extends ActionTemplate = ActionTemplate,
+  Picked extends keyof ContextAvailability = keyof ContextAvailability,
+> =
+  | Type
+  | ContextFunction<Type, Base, Picked>;
 
 export type LiteralString = string & Record<never, never>;
 export type IsUnknown<Type> = unknown extends Type ? true : never;
@@ -58,9 +85,6 @@ export interface HasActionTemplate<Base extends ActionTemplate> {
   zBase$: Base;
 }
 
-export type WithStep<Type> = Type & { inStep: true; inJob: true };
-export type WithJob<Type> = Type & { inJob: true };
-
 export enum Runner {
   SelfHosted = "self-hosted",
   /**
@@ -95,12 +119,9 @@ export enum Runner {
 }
 
 export interface ActionTemplate {
-  inJob?: boolean;
-  inStep?: boolean;
   events?: keyof WorkflowEvents;
   env?: string;
   services?: string;
-  /** Jobs to their outputs */
   jobs?: string;
   jobOutputs?: string;
   hoistEnv?: string;
@@ -110,11 +131,9 @@ export interface ActionTemplate {
   needs?: string;
   matrix?: string;
   inputs?: string;
-  stepId?: string | undefined;
-  tmp?: unknown;
+  outputs?: string;
+  stepId?: string;
 }
-
-// type B = {[Key in 'a'  | 'b' as `job_outputs:${Key}`]: Key}
 
 export interface ActionData<
   Base extends ActionTemplate = ActionTemplate,
@@ -135,7 +154,7 @@ export interface ActionData<
    * Information about the currently running job. For more information, see job
    * context.
    */
-  job: Base["inJob"] extends true ? JobData<Base> : never;
+  job: JobData<Base>;
 
   /**
    * For reusable workflows only, contains outputs of jobs from the reusable
@@ -147,13 +166,13 @@ export interface ActionData<
    * Information about the steps that have been run in the current job. For more
    * information, see steps context.
    */
-  steps: Base["inJob"] extends true ? StepsData<Base> : never;
+  steps: StepsData<Base>;
 
   /**
    * Information about the runner that is running the current job. For more
    * information, see runner context.
    */
-  runner: Base["inJob"] extends true ? RunnerData : never;
+  runner: RunnerData;
 
   /**
    * Contains the names and values of secrets that are available to a workflow
@@ -171,24 +190,37 @@ export interface ActionData<
    * Contains the matrix properties defined in the workflow that apply to the
    * current job. For more information, see matrix context.
    */
-  matrix: Base["inJob"] extends true ? MatrixData<Base> : never;
+  matrix: MatrixData<Base>;
 
   /**
    * Contains the outputs of all jobs that are defined as a dependency of the
    * current job. For more information, see needs context.
    */
-  needs: Base["inJob"] extends true ? NeedsData<Base> : never;
+  needs: NeedsData<Base>;
 
   /**
    * Contains the inputs of a reusable or manually triggered workflow. For more
    * information, see inputs context.
    */
-  inputs: InputData<Base>;
+  inputs: Required<InputData<Base>>;
 }
 
-type InputData<Base extends ActionTemplate> = {
+export type InputData<Base extends ActionTemplate> = {
   [Input in NonNullable<Base["inputs"]>]: GetInput<Input, Base>;
 };
+
+export type ExpressionInputData<
+  Base extends ActionTemplate,
+  Keys extends NonNullable<Base["inputs"]> = NonNullable<Base["inputs"]>,
+  PartialKeys extends Keys extends Keys
+    ? undefined extends GetInput<Keys, Base> ? Keys : never
+    : never = Keys extends Keys
+      ? undefined extends GetInput<Keys, Base> ? Keys : never
+      : never,
+  RequiredKeys extends Exclude<Keys, PartialKeys> = Exclude<Keys, PartialKeys>,
+> =
+  & { [Key in PartialKeys]?: ExpressionValue<NonNullable<GetInput<Key, Base>>> }
+  & { [Key in RequiredKeys]: ExpressionValue<GetInput<Key, Base>> };
 
 export type StepOutputKey<StepId extends string, OutputName extends string> =
   GenerateKeyObject<
@@ -330,8 +362,10 @@ export interface RunnerData {
 type RunnerOS = "Linux" | "Windows" | "macOS";
 type RunnerArch = "X86" | "X64" | "ARM" | "ARM64";
 
+type GetKeyName<Prefix extends string, Name extends string> =
+  `${Prefix}:${Name}`;
 type GenerateKeyObject<Prefix extends string, Name extends string, Type> = {
-  [Key in Name as `${Prefix}:${Key}`]: Type;
+  [Key in Name as GetKeyName<Prefix, Key>]: Type;
 };
 
 type JobMatrixKey<Name extends string, Type> = GenerateKeyObject<
@@ -369,17 +403,6 @@ type GetMatrix<Name extends string, Base extends ActionTemplate> = Base extends
 export type MatrixData<Base extends ActionTemplate> = {
   [Key in NonNullable<Base["matrix"]>]: GetMatrix<Key, Base>;
 };
-
-type A = {
-  events: "pull_request" | "push";
-  inJob: true;
-  env: "DENO_DIR";
-  matrix: "os" | "deno";
-  "job_matrix:os": Runner;
-  "job_matrix:deno": string;
-};
-
-type B = MatrixData<A>;
 
 export interface StrategyOptions<
   Matrix extends Record<string, readonly unknown[]> = Record<
@@ -1100,17 +1123,13 @@ export type EnvProps = {
 
 export type GetEventOptions<
   Event extends keyof WorkflowEventOptions,
-  Base extends ActionTemplate = ActionTemplate,
-> = object extends WorkflowEventOptions[Event]
-  ? [options?: WithContext<WorkflowEventOptions[Event], Base> | undefined]
-  : [options: WithContext<WorkflowEventOptions[Event], Base>];
-// type A = object extends { a?: number } ? "yes" : "no";
-export type SetPermissions =
-  | PermissionAll
-  | Expression<PermissionAll>
-  | Permissions;
+> = object extends WorkflowEventOptions[Event] ? [
+    options?: WorkflowEventOptions[Event] | undefined,
+  ]
+  : [options: WorkflowEventOptions[Event]];
+export type SetPermissions = PermissionAll | Permissions;
 export type PermissionAll = "read-all" | "write-all";
-export type Listed<Type> = Type | readonly Type[] | Type[];
+export type Listed<Type> = Type | readonly Type[];
 interface ActivityTypes<Action extends string> {
   /**
    * The activity types to trigger on.
@@ -1119,52 +1138,54 @@ interface ActivityTypes<Action extends string> {
    */
   types?: readonly Action[];
 }
-type WithTypes<Name extends WebhookEventName> = EventPayloadMap[Name] extends
-  { action: infer Action extends string } ? ActivityTypes<Action> : {};
+type WithEventTypes<Name extends WebhookEventName> =
+  EventPayloadMap[Name] extends { action: infer Action extends string }
+    ? ActivityTypes<Action>
+    : {};
 
 export interface WorkflowEventOptions {
-  branch_protection_rule: WithTypes<"branch_protection_rule">;
-  check_run: WithTypes<"check_run">;
-  check_suite: WithTypes<"check_suite">;
-  create: WithTypes<"create">;
-  delete: WithTypes<"delete">;
-  deployment: WithTypes<"deployment">;
-  deployment_status: WithTypes<"deployment_status">;
-  discussion: WithTypes<"discussion">;
-  discussion_comment: WithTypes<"discussion_comment">;
-  fork: WithTypes<"fork">;
-  gollum: WithTypes<"gollum">;
-  issue_comment: WithTypes<"issue_comment">;
-  issues: WithTypes<"issues">;
-  label: WithTypes<"label">;
-  milestone: WithTypes<"milestone">;
-  page_build: WithTypes<"page_build">;
-  project: WithTypes<"project">;
-  project_card: WithTypes<"project_card">;
-  project_column: WithTypes<"project_column">;
-  public: WithTypes<"public">;
+  branch_protection_rule: WithEventTypes<"branch_protection_rule">;
+  check_run: WithEventTypes<"check_run">;
+  check_suite: WithEventTypes<"check_suite">;
+  create: WithEventTypes<"create">;
+  delete: WithEventTypes<"delete">;
+  deployment: WithEventTypes<"deployment">;
+  deployment_status: WithEventTypes<"deployment_status">;
+  discussion: WithEventTypes<"discussion">;
+  discussion_comment: WithEventTypes<"discussion_comment">;
+  fork: WithEventTypes<"fork">;
+  gollum: WithEventTypes<"gollum">;
+  issue_comment: WithEventTypes<"issue_comment">;
+  issues: WithEventTypes<"issues">;
+  label: WithEventTypes<"label">;
+  milestone: WithEventTypes<"milestone">;
+  page_build: WithEventTypes<"page_build">;
+  project: WithEventTypes<"project">;
+  project_card: WithEventTypes<"project_card">;
+  project_column: WithEventTypes<"project_column">;
+  public: WithEventTypes<"public">;
   pull_request: PullRequestOptions;
   /**
    * @deprecated use `issue_comment`
    */
-  pull_request_comment: WithTypes<"issue_comment">;
-  pull_request_review: WithTypes<"pull_request_review">;
-  pull_request_review_comment: WithTypes<"pull_request_review_comment">;
+  pull_request_comment: WithEventTypes<"issue_comment">;
+  pull_request_review: WithEventTypes<"pull_request_review">;
+  pull_request_review_comment: WithEventTypes<"pull_request_review_comment">;
   pull_request_target: PullRequestOptions;
   push: PushOptions;
-  registry_package: WithTypes<"package">;
-  release: WithTypes<"release">;
-  repository_dispatch: WithTypes<"repository_dispatch">;
+  registry_package: WithEventTypes<"package">;
+  release: WithEventTypes<"release">;
+  repository_dispatch: WithEventTypes<"repository_dispatch">;
   schedule: Listed<{ cron: string }>;
-  status: WithTypes<"status">;
-  watch: WithTypes<"watch">;
+  status: WithEventTypes<"status">;
+  watch: WithEventTypes<"watch">;
   workflow_call: WorkflowCallOptions;
   workflow_dispatch: WorkflowDispatchOptions;
   workflow_run: WorkflowRunOptions;
 }
 
 export interface PullRequestOptions
-  extends WithTypes<"pull_request">, PushOptions {
+  extends WithEventTypes<"pull_request">, PushOptions {
 }
 
 export interface PushOptions {
@@ -1208,7 +1229,7 @@ export interface PushOptions {
 export interface WorkflowCallOptions {
   inputs?: Record<string, WorkflowCallInput> | undefined;
   outputs?: Record<string, WorkflowOutput> | undefined;
-  secrets?: Record<string, Secret> | undefined;
+  secrets?: Record<string, WorkflowSecret> | undefined;
 }
 
 type InputKey<Name extends string, Type> = GenerateKeyObject<
@@ -1219,24 +1240,82 @@ type InputKey<Name extends string, Type> = GenerateKeyObject<
 export type InputKeys<
   Input extends Record<string, WorkflowDispatchInput>,
   Key extends StringKeyOf<Input> = StringKeyOf<Input>,
-> = Key extends string
-  ? { inputs: Key } & InputKey<Key, GetInputType<Input[Key]>>
+> = Key extends string ? 
+    & { inputs: Key }
+    & InputKey<
+      Key,
+      GetInputType<Input[Key]> | GetUndefinedInputType<Input[Key]>
+    >
   : never;
+
+type SecretKey<Name extends string, Type> = GenerateKeyObject<
+  "secrets",
+  Name,
+  Type
+>;
+
+export type SecretKeys<
+  Secret extends Record<string, WorkflowSecret>,
+  Key extends StringKeyOf<Secret> = StringKeyOf<Secret>,
+> = Key extends string ? 
+    & { secrets: Key }
+    & SecretKey<
+      Key,
+      Secret[Key] extends { required: true } ? "required" : "optional"
+    >
+  : never;
+
+type GetSecret<Name extends string, Base extends ActionTemplate> = Base extends
+  SecretKey<Name, infer Type> ? Type : never;
+export type ExpressionSecretData<
+  Base extends ActionTemplate,
+  Keys extends NonNullable<Base["secrets"]> = NonNullable<Base["secrets"]>,
+  RequiredKeys extends Keys extends Keys
+    ? "required" extends GetSecret<Keys, Base> ? Keys : never
+    : never = Keys extends Keys
+      ? "required" extends GetSecret<Keys, Base> ? Keys : never
+      : never,
+  PartialKeys extends Exclude<Keys, RequiredKeys> = Exclude<Keys, RequiredKeys>,
+> =
+  & { [Key in PartialKeys]?: ExpressionValue }
+  & { [Key in RequiredKeys]: ExpressionValue };
+
+export type PickSecrets<
+  Base extends ActionTemplate,
+  Keys extends GetKeyName<"secrets", NonNullable<Base["secrets"]>> = GetKeyName<
+    "secrets",
+    NonNullable<Base["secrets"]>
+  >,
+> = Keys extends keyof Base ? Pick<Base, Keys> : {};
+
+type GetUndefinedInputType<Type extends WorkflowDispatchInput> =
+  Type["required"] extends false ? undefined
+    : undefined extends Type["required"] ? undefined
+    : undefined extends Type["default"] ? never
+    : undefined;
 
 type GetInputType<Type extends WorkflowDispatchInput> = Type extends
   StringInput | ChoiceInput | EnvironmentInput ? string
   : Type extends BooleanInput ? boolean
   : Type extends NumberInput ? number
   : never;
-type GetInput<Name extends string, Base extends ActionTemplate> = Base extends
-  InputKey<Name, infer Type> ? Type : LiteralString;
+export type GetInput<Name extends string, Base extends ActionTemplate> =
+  Base extends InputKey<Name, infer Type> ? Type : never;
+
+export type PickInputs<
+  Base extends ActionTemplate,
+  Keys extends GetKeyName<"input", NonNullable<Base["inputs"]>> = GetKeyName<
+    "input",
+    NonNullable<Base["inputs"]>
+  >,
+> = Keys extends keyof Base ? Pick<Base, Keys> : {};
 
 export interface WorkflowDispatchOptions {
   inputs?: Record<string, WorkflowDispatchInput> | undefined;
 }
 
 export interface WorkflowRunOptions
-  extends WithTypes<"workflow_run">, PushOptions {
+  extends WithEventTypes<"workflow_run">, PushOptions {
   workflows: Array<string | { name: string }>;
 }
 
@@ -1246,7 +1325,7 @@ export type WorkflowDispatchInput =
   | ChoiceInput
   | EnvironmentInput;
 interface BaseInput {
-  require?: boolean | undefined;
+  required?: boolean | undefined;
   description?: string | undefined;
 }
 interface StringInput extends BaseInput {
@@ -1302,26 +1381,26 @@ export interface WorkflowOutput {
   value: string | Expression;
 }
 
-export interface Secret {
+export interface WorkflowSecret {
   description?: string | undefined;
   /** @default false */
   required?: boolean | undefined;
 }
 
 export interface Permissions {
-  actions?: Permission | Expression<Permission> | undefined;
-  checks?: Permission | Expression<Permission> | undefined;
-  contents?: Permission | Expression<Permission> | undefined;
-  deployments?: Permission | Expression<Permission> | undefined;
-  idToken?: Permission | Expression<Permission> | undefined;
-  issues?: Permission | Expression<Permission> | undefined;
-  discussions?: Permission | Expression<Permission> | undefined;
-  packages?: Permission | Expression<Permission> | undefined;
-  pages?: Permission | Expression<Permission> | undefined;
-  pullRequests?: Permission | Expression<Permission> | undefined;
-  repositoryProjects?: Permission | Expression<Permission> | undefined;
-  securityEvents?: Permission | Expression<Permission> | undefined;
-  statuses?: Permission | Expression<Permission> | undefined;
+  actions?: Permission | undefined;
+  checks?: Permission | undefined;
+  contents?: Permission | undefined;
+  deployments?: Permission | undefined;
+  idToken?: Permission | undefined;
+  issues?: Permission | undefined;
+  discussions?: Permission | undefined;
+  packages?: Permission | undefined;
+  pages?: Permission | undefined;
+  pullRequests?: Permission | undefined;
+  repositoryProjects?: Permission | undefined;
+  securityEvents?: Permission | undefined;
+  statuses?: Permission | undefined;
 }
 
 type Permission = "read" | "write" | "none";
@@ -1331,6 +1410,13 @@ export interface DefaultsProp {
   run?: {
     shell?: ExpressionValue<`${Shell}`> | undefined;
     "working-directory"?: ExpressionValue<string> | undefined;
+  };
+}
+
+export interface WorkflowDefaultsProps {
+  run?: {
+    shell?: `${Shell}` | undefined;
+    "working-directory"?: string | undefined;
   };
 }
 
@@ -1383,4 +1469,219 @@ export enum Shell {
    * name. `powershell -command ". '{0}'"`.
    */
   PowerShellDesktop = "powershell",
+}
+
+export interface ContextAvailability {
+  "concurrency": "github" | "inputs";
+  "env": "github" | "secrets" | "inputs";
+  "jobs:jobId:concurrency":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "inputs";
+  "jobs:jobId:container":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "env"
+    | "secrets"
+    | "inputs";
+  "jobs:jobId:container:credentials":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "env"
+    | "secrets"
+    | "inputs";
+  "jobs:jobId:container:env:envId":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "job"
+    | "runner"
+    | "env"
+    | "secrets"
+    | "inputs";
+  "jobs:jobId:continueOnError":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "inputs";
+  "jobs:jobId:defaults:run":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "env"
+    | "inputs";
+  "jobs:jobId:env":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "secrets"
+    | "inputs";
+  "jobs:jobId:environment":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "inputs";
+  "jobs:jobId:environment:url":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "job"
+    | "runner"
+    | "env"
+    | "steps"
+    | "inputs";
+  "jobs:jobId:if": "github" | "needs" | "inputs";
+  "jobs:jobId:name": "github" | "needs" | "strategy" | "matrix" | "inputs";
+  "jobs:jobId:outputs:outputId":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "job"
+    | "runner"
+    | "env"
+    | "secrets"
+    | "steps"
+    | "inputs";
+  "jobs:jobId:runsOn": "github" | "needs" | "strategy" | "matrix" | "inputs";
+  "jobs:jobId:secrets:secretsId":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "secrets"
+    | "inputs";
+  "jobs:jobId:services": "github" | "needs" | "strategy" | "matrix" | "inputs";
+  "jobs:jobId:services:serviceId:credentials":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "env"
+    | "secrets"
+    | "inputs";
+  "jobs:jobId:services:serviceId:env:envId":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "job"
+    | "runner"
+    | "env"
+    | "secrets"
+    | "inputs";
+  "jobs:jobId:steps:continueOnError":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "job"
+    | "runner"
+    | "env"
+    | "secrets"
+    | "steps"
+    | "inputs";
+  "jobs:jobId:steps:env":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "job"
+    | "runner"
+    | "env"
+    | "secrets"
+    | "steps"
+    | "inputs";
+  "jobs:jobId:steps:if":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "job"
+    | "runner"
+    | "env"
+    | "steps"
+    | "inputs";
+  "jobs:jobId:steps:name":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "job"
+    | "runner"
+    | "env"
+    | "secrets"
+    | "steps"
+    | "inputs";
+  "jobs:jobId:steps:run":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "job"
+    | "runner"
+    | "env"
+    | "secrets"
+    | "steps"
+    | "inputs";
+  "jobs:jobId:steps:timeoutMinutes":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "job"
+    | "runner"
+    | "env"
+    | "secrets"
+    | "steps"
+    | "inputs";
+  "jobs:jobId:steps:with":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "job"
+    | "runner"
+    | "env"
+    | "secrets"
+    | "steps"
+    | "inputs";
+  "jobs:jobId:steps:workingDirectory":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "job"
+    | "runner"
+    | "env"
+    | "secrets"
+    | "steps"
+    | "inputs";
+  "jobs:jobId:strategy": "github" | "needs" | "inputs";
+  "jobs:jobId:timeoutMinutes":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "inputs";
+  "jobs:jobId:with:withId":
+    | "github"
+    | "needs"
+    | "strategy"
+    | "matrix"
+    | "inputs";
+  "on:workflow_call:inputs:inputsId:default": "github" | "inputs";
+  "on:workflow_call:outputs:outputId:value": "github" | "jobs" | "inputs";
 }

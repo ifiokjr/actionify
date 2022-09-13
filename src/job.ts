@@ -1,11 +1,8 @@
+import { isEmpty } from "./deps/just.ts";
 import { isFunction } from "./deps/just.ts";
 import { StringKeyOf } from "./deps/types.ts";
-import {
-  context,
-  Contextify,
-  ExpressionValue,
-  WithContext,
-} from "./expressions.ts";
+import { ActionifyError, JobError } from "./errors.ts";
+import { Contextify, ExpressionValue } from "./expressions.ts";
 import { AnyStep, Step } from "./step.ts";
 import type {
   ActionData,
@@ -13,30 +10,36 @@ import type {
   CombineAsUnion,
   DefaultsProp,
   EnvProps,
+  ExpressionInputData,
+  ExpressionSecretData,
   GetTemplate,
   HasActionTemplate,
+  Listed,
   LiteralString,
   MatrixKeys,
+  PickInputs,
+  PickSecrets,
+  ReplaceMethods,
   Runner,
   SetPermissions,
   StepOutput,
   StrategyOptions,
-  WithJob,
-  WithStep,
+  WithContext,
 } from "./types.ts";
 import { getFromContext } from "./utils.ts";
+import type { AnyWorkflow, Workflow } from "./workflow.ts";
 
 /**
  * Create a job which can be added to a workflow.
  */
-export function job<Base extends ActionTemplate = {}>(): Job<WithJob<Base>> {
+export function job<Base extends ActionTemplate = {}>(): Job<Base> {
   return Job.create();
 }
 
 export class Job<
-  Base extends ActionTemplate = WithJob<ActionTemplate>,
+  Base extends ActionTemplate = ActionTemplate,
 > implements HasActionTemplate<Base> {
-  static create<Base extends ActionTemplate = {}>(): Job<WithJob<Base>> {
+  static create<Base extends ActionTemplate = {}>(): Job<Base> {
     return new Job();
   }
 
@@ -50,7 +53,7 @@ export class Job<
   declare zBase$: Base;
   #name?: ExpressionValue<string> | undefined;
   #permissions: SetPermissions | undefined;
-  #needs: string | string[] | undefined;
+  #needs: Listed<string> | undefined;
   #if: ExpressionValue | undefined;
   #runsOn: ExpressionValue<string | string[]> | undefined;
   #environment: EnvironmentOptions | undefined;
@@ -65,7 +68,7 @@ export class Job<
   #container: ContainerOptions | undefined;
   #services: Record<string, ContainerProps> | undefined;
   #uses: string | undefined;
-  #with: Record<string, ExpressionValue> | undefined;
+  #with: object | undefined;
   #secrets: SecretsInput | undefined;
   #steps: AnyStep[] = [];
 
@@ -75,13 +78,33 @@ export class Job<
    * Use jobs.<job_id>.name to set a name for the job, which is displayed in the
    * GitHub UI.
    */
-  name(name: WithContext<ExpressionValue<string>, Base> | undefined) {
+  name(
+    name:
+      | WithContext<ExpressionValue<string>, Base, "jobs:jobId:name">
+      | undefined,
+  ) {
     this.#name = getFromContext(name);
     return this;
   }
 
-  permissions(permissions: WithContext<SetPermissions, Base>) {
-    this.#permissions = getFromContext(permissions);
+  /**
+   * For a specific job, you can use jobs.<job_id>.permissions to modify the
+   * default permissions granted to the GITHUB_TOKEN, adding or removing access
+   * as required, so that you only allow the minimum required access. For more
+   * information, see "Authentication in a workflow."
+   *
+   * By specifying the permission within a job definition, you can configure a
+   * different set of permissions for the GITHUB_TOKEN for each job, if
+   * required. Alternatively, you can specify the permissions for all jobs in
+   * the workflow.
+   */
+  permissions(permissions: SetPermissions | false) {
+    if (permissions === false) {
+      this.#permissions = undefined;
+    } else {
+      this.#permissions = permissions;
+    }
+
     return this;
   }
 
@@ -96,10 +119,9 @@ export class Job<
    * #### Requiring successful dependent jobs
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: "ci", fileName: "ci" })
+   * const ci = workflow({ name: "ci", fileName: "ci" })
    *   .job('a', (job) => job.name('A'))
    *   .job('b', (job) => job.name('B'))
    *   .job('c', (job) => job.name('C').needs('a'))
@@ -107,12 +129,11 @@ export class Job<
    * ```
    */
   needs<Name extends NonNullable<Base["jobs"]>>(
-    needs: WithContext<Name | Name[], Base>,
+    needs: Listed<Name>,
   ): Job<CombineAsUnion<Base | { needs: Name }>> {
-    this.#needs = getFromContext(needs);
+    this.#needs = needs;
 
-    // @ts-expect-error This type would be very difficult to infer due to the
-    // builder pattern.
+    // @ts-expect-error The builder pattern makes this difficult to infer
     return this;
   }
 
@@ -132,10 +153,9 @@ export class Job<
    * more information, see "Contexts."
    *
    * ```ts
-   * import { Workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: "ci", fileName: "ci" })
+   * const ci = workflow({ name: "ci", fileName: "ci" })
    *   .job('firstJob', (job) => {
    *     return job
    *       .name('A')
@@ -146,11 +166,10 @@ export class Job<
    * ```
    */
   outputs<Options extends DefaultOutputOptions>(
-    outputs: WithContext<Options, Base>,
+    outputs: WithContext<Options, Base, "jobs:jobId:outputs:outputId">,
   ): Job<CombineAsUnion<Base | { jobOutputs: StringKeyOf<Options> }>> {
     this.#outputs = getFromContext(outputs);
-    // @ts-expect-error This type would be very difficult to infer due to the
-    // builder pattern.
+    // @ts-expect-error The builder pattern makes this difficult to infer
     return this;
   }
 
@@ -169,10 +188,9 @@ export class Job<
    * Otherwise, the job will be marked as skipped.
    *
    * ```ts
-   * import { Workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: "ci", fileName: "ci" })
+   * const ci = workflow({ name: "ci", fileName: "ci" })
    *   .on('push')
    *   .job('productionDeploy', job => {
    *     return job
@@ -180,7 +198,7 @@ export class Job<
    *   });
    * ```
    */
-  if(statement: WithContext<ExpressionValue, Base>) {
+  if(statement: WithContext<ExpressionValue, Base, "jobs:jobId:if">) {
     this.#if = getFromContext(statement);
     return this;
   }
@@ -195,10 +213,9 @@ export class Job<
    * `.strategy()`.
    *
    * ```ts
-   * import { Workflow, Runner } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow, Runner } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .job('setup', job => job.runsOn(Runner.UbuntuLatest))
    * ```
    *
@@ -220,15 +237,14 @@ export class Job<
    * not unintentionally specify any current or future GitHub-hosted runners.
    *
    * ```ts
-   * import { Workflow, Runner } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow, Runner } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .job('setup', job => job.runsOn(['self-hosted', 'linux']));
    * ```
    */
   runsOn(
-    runsOn: WithContext<RunsOnOptions, Base>,
+    runsOn: WithContext<RunsOnOptions, Base, "jobs:jobId:runsOn">,
   ) {
     this.#runsOn = getFromContext(runsOn);
     return this;
@@ -248,20 +264,18 @@ export class Job<
    * ##### Using a single environment name
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .job('setup', job => job.environment('production'));
    * ```
    *
    * ##### Using environment name and URL
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .job('setup', job => job.environment({
    *      name: 'production',
    *      url: 'https://github.com'
@@ -274,10 +288,9 @@ export class Job<
    * ##### Using output as URL
    *
    * ```ts
-   * import { commands, e, Workflow } from "https://deno.land/x/actionify@0.1.0/mod.ts";
+   * import { commands, e, workflow } from "https://deno.land/x/actionify@0.1.0/mod.ts";
    *
-   * const workflow = Workflow
-   *   .create({ name: "ci" })
+   * const ci = workflow({ name: "ci" })
    *   .job("setup", (job) => {
    *     return job
    *       .step((step) => {
@@ -293,7 +306,13 @@ export class Job<
    *
    * ```
    */
-  environment(environment: WithContext<EnvironmentOptions, Base>) {
+  environment(
+    environment: WithContext<
+      EnvironmentOptions,
+      Base,
+      "jobs:jobId:environment" | "jobs:jobId:environment:url"
+    >,
+  ) {
     this.#environment = getFromContext(environment);
     return this;
   }
@@ -317,10 +336,9 @@ export class Job<
    * ##### Using concurrency and the default behavior
    *
    * ```ts
-   * import { Workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .on('push')
    *   .concurrency(ctx => e.concat('ci-', ctx.github.ref));
    * ```
@@ -328,10 +346,9 @@ export class Job<
    * ##### Using concurrency to cancel any in-progress job or run
    *
    * ```ts
-   * import { Workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .on('push')
    *   .concurrency(ctx => ({
    *     group: e.expr(ctx.github.ref),
@@ -351,10 +368,9 @@ export class Job<
    * guaranteed to be both unique and defined for the run.
    *
    * ```ts
-   * import { Workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .on('push')
    *   .concurrency(ctx => ({
    *     group: e.op(ctx.github.ref, '||', ctx.github.run_id),
@@ -373,10 +389,9 @@ export class Job<
    * github.workflow property to build the concurrency group:
    *
    * ```ts
-   * import { Workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .on('push')
    *   .concurrency(ctx => ({
    *     group: e.op(ctx.github.ref, '||', ctx.github.run_id),
@@ -384,7 +399,9 @@ export class Job<
    *   }));
    * ```
    */
-  concurrency(options: WithContext<ConcurrentOptions, Base>) {
+  concurrency(
+    options: WithContext<ConcurrentOptions, Base, "jobs:jobId:concurrency">,
+  ) {
     this.#concurrency = getFromContext(options);
     return this;
   }
@@ -403,21 +420,19 @@ export class Job<
    * job executes.
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .job('myJob', job => {
    *     return job.name('My Job').env({ SERVER: 'production' });
    *   });
    * ```
    */
   env<Env extends EnvProps>(
-    env: WithContext<Env, Base>,
+    env: WithContext<Env, Base, "jobs:jobId:env">,
   ): Job<CombineAsUnion<Base | { env: StringKeyOf<Env> }>> {
     this.#env = getFromContext(env);
-    // @ts-expect-error This type would be very difficult to infer due to the
-    // builder pattern.
+    // @ts-expect-error The builder pattern makes this difficult to infer
     return this;
   }
 
@@ -441,10 +456,9 @@ export class Job<
    * ##### Set the default shell and working directory
    *
    * ```ts
-   * import { Workflow } from "https://deno.land/x/actionify@0.1.0/mod.ts";
+   * import { workflow } from "https://deno.land/x/actionify@0.1.0/mod.ts";
    *
-   * const workflow = Workflow
-   *   .create({ name: "ci" })
+   * const ci = workflow({ name: "ci" })
    *   .on("push")
    *   .jobs({
    *     "job1": (job) => {
@@ -454,7 +468,9 @@ export class Job<
    *   });
    * ```
    */
-  defaults(defaults: DefaultsProp) {
+  defaults(
+    defaults: WithContext<DefaultsProp, Base, "jobs:jobId:defaults:run">,
+  ) {
     this.#defaults = getFromContext(defaults);
     return this;
   }
@@ -469,8 +485,14 @@ export class Job<
    * for GitHub-hosted runners and "About self-hosted runners" for self-hosted
    * runner usage limits.
    */
-  timeoutMinutes(minutes: number) {
-    this.#timeoutMinutes = minutes;
+  timeoutMinutes(
+    minutes: WithContext<
+      ExpressionValue<number>,
+      Base,
+      "jobs:jobId:timeoutMinutes"
+    >,
+  ) {
+    this.#timeoutMinutes = getFromContext(minutes);
     return this;
   }
 
@@ -487,15 +509,18 @@ export class Job<
     Excluded extends Record<LiteralString, unknown>,
     Included extends Record<LiteralString, unknown>,
   >(
-    strategy: WithContext<StrategyOptions<Matrix, Excluded, Included>, Base>,
+    strategy: WithContext<
+      StrategyOptions<Matrix, Excluded, Included>,
+      Base,
+      "jobs:jobId:strategy"
+    >,
   ): Job<
     CombineAsUnion<
       Base | MatrixKeys<Matrix, Excluded, Included>
     >
   > {
     this.#strategy = getFromContext(strategy);
-    // @ts-expect-error This type would be very difficult to infer due to the
-    // builder pattern.
+    // @ts-expect-error The builder pattern makes this difficult to infer
     return this;
   }
 
@@ -525,10 +550,9 @@ export class Job<
    * with node set to 15 to fail without failing the workflow run.
    *
    * ```ts
-   * import { Workflow, e, Runner } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow, e, Runner } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci', })
+   * const ci = workflow({ name: 'ci', })
    *   .job('job', (job) => {
    *     return job
    *       .strategy({
@@ -545,7 +569,13 @@ export class Job<
    *   })
    * ```
    */
-  continueOnError(continueOnError: WithContext<ExpressionValue, Base>) {
+  continueOnError(
+    continueOnError: WithContext<
+      ExpressionValue,
+      Base,
+      "jobs:jobId:continueOnError"
+    >,
+  ) {
     this.#continueOnError = getFromContext(continueOnError);
     return this;
   }
@@ -580,11 +610,16 @@ export class Job<
    * :::
    */
   container<Env extends EnvProps>(
-    container: WithContext<ContainerOptions<Env>, Base>,
+    container: WithContext<
+      ContainerOptions<Env>,
+      Base,
+      | "jobs:jobId:container"
+      | "jobs:jobId:container:env:envId"
+      | "jobs:jobId:container:credentials"
+    >,
   ): Job<CombineAsUnion<Base | { env: StringKeyOf<Env> }>> {
     this.#container = getFromContext(container);
-    // @ts-expect-error This type would be very difficult to infer due to the
-    // builder pattern.
+    // @ts-expect-error The builder pattern makes this difficult to infer
     return this;
   }
 
@@ -621,11 +656,16 @@ export class Job<
    * containers, see "About service containers."
    */
   services<Services extends string>(
-    services: WithContext<Record<Services, ContainerProps>, Base>,
+    services: WithContext<
+      Record<Services, ContainerProps>,
+      Base,
+      | "jobs:jobId:services"
+      | "jobs:jobId:services:serviceId:credentials"
+      | "jobs:jobId:services:serviceId:env:envId"
+    >,
   ): Job<CombineAsUnion<Base | { services: Services }>> {
     this.#services = getFromContext(services);
-    // @ts-expect-error This type would be very difficult to infer due to the
-    // builder pattern.
+    // @ts-expect-error The builder pattern makes this difficult to infer
     return this;
   }
 
@@ -643,10 +683,9 @@ export class Job<
    *   workflow is from the same commit as the caller workflow.
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .job('call-workflow-1-in-local-repo', (job) => {
    *     return job
    *       .uses('octo-org/this-repo/.github/workflows/workflow-1.yml@172239021f7ba04fe7327647b213799853a9eb89')
@@ -662,8 +701,14 @@ export class Job<
    * For more information, see "[Reusing
    * workflows](https://docs.github.com/en/actions/learn-github-actions/reusing-workflows)."
    */
-  uses(uses: string) {
-    this.#uses = uses;
+  uses<Workflow extends AnyWorkflow>(
+    uses: string | Workflow,
+  ): Job<CombineAsUnion<Base | ExtractFromWorkflow<Workflow>>> {
+    this.#uses = typeof uses === "string"
+      ? uses
+      : `./.github/workflows/${uses.fileName}.yml`;
+
+    // @ts-expect-error The builder pattern makes this difficult to infer
     return this;
   }
 
@@ -680,17 +725,23 @@ export class Job<
    * context.
    *
    * ```ts
-   * import { Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .job('call-workflow', (job) => job
    *     .uses('octo-org/example-repo/.github/workflows/called-workflow.yml')
    *     .with({ username: 'mona' })
    *   );
    * ```
    */
-  with(props: WithContext<Record<string, ExpressionValue>, Base>) {
+  with(
+    props: WithContext<
+      // Record<string, ExpressionValue> &
+      ExpressionInputData<Base>,
+      Base,
+      "jobs:jobId:with:withId"
+    >,
+  ) {
     this.#with = getFromContext(props);
     return this;
   }
@@ -703,10 +754,9 @@ export class Job<
    * workflow.
    *
    * ```ts
-   * import { e, Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { e, workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .on('push')
    *   .job('call-workflow', (job) => job
    *     .uses('octo-org/example-repo/.github/workflows/called-workflow.yml')
@@ -723,18 +773,16 @@ export class Job<
    * organization, or across organizations within the same enterprise.
    *
    * ```ts
-   * import { e, Runner, Workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { e, Runner, workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
    *
-   * const workflow = Workflow
-   *   .create({ name: 'ci' })
+   * const ci = workflow({ name: 'ci' })
    *   .on('workflow_dispatch')
    *   .job('pass-secrets-to-workflow', (job) => job
    *     .uses('./.github/workflows/called-workflow.yml')
    *     .secrets('inherit')
    *   );
    *
-   * const reusable = Workflow
-   *   .create({ name: 'called-workflow' })
+   * const reusable = workflow({ name: 'called-workflow' })
    *   .on('workflow_call')
    *   .job('pass-secret-to-action', job => job
    *     .runsOn(Runner.UbuntuLatest)
@@ -745,7 +793,13 @@ export class Job<
    *   );
    * ```
    */
-  secrets(secrets: WithContext<SecretsInput, Base>) {
+  secrets(
+    secrets: WithContext<
+      "inherit" | ExpressionSecretData<Base>,
+      Base,
+      "jobs:jobId:secrets:secretsId"
+    >,
+  ) {
     this.#secrets = getFromContext(secrets);
     return this;
   }
@@ -773,10 +827,9 @@ export class Job<
       | StepOutput<Id, GetStepOutputs<OutputStep>>
     >
   > {
-    const result = isFunction(step) ? step(Step.create(), context()) : step;
+    const result = isFunction(step) ? step(Step.create()) : step;
     this.#steps.push(result);
-    // @ts-expect-error This type would be very difficult to infer due to the
-    // builder pattern.
+    // @ts-expect-error The builder pattern makes this difficult to infer
     return this;
   }
 
@@ -787,11 +840,10 @@ export class Job<
     steps: Steps,
   ): Job<CombineAsUnion<Base | GetSteps<Base, Steps>>> {
     const results = steps.map((step) =>
-      isFunction(step) ? step(Step.create(), context()) : step
+      isFunction(step) ? step(Step.create()) : step
     );
     this.#steps.push(...results);
-    // @ts-expect-error This type would be very difficult to infer due to the
-    // builder pattern.
+    // @ts-expect-error The builder pattern makes this difficult to infer
     return this;
   }
 
@@ -801,6 +853,35 @@ export class Job<
 
   toJSON() {
     const json = Object.create(null);
+    const errors: Error[] = [];
+    const valid = (!!this.#steps.length || !!this.#uses) &&
+      !(this.#steps.length > 0 && this.#uses);
+
+    if (!valid) {
+      errors.push(
+        new JobError(
+          `The job '${this.#name}' requires either 'steps' or a 'uses' property.`,
+        ),
+      );
+    }
+
+    if (
+      this.#steps.length > 0 &&
+      (!this.#runsOn || (Array.isArray(this.#runsOn) && isEmpty(this.#runsOn)))
+    ) {
+      errors.push(
+        new JobError(
+          `The job '${this.#name}'is missing the following properties: 'runsOn'.`,
+        ),
+      );
+    }
+
+    if (errors.length > 0) {
+      throw new ActionifyError(
+        `Invalid Job configuration: '${this.#name}'`,
+        errors,
+      );
+    }
 
     json.name = this.#name;
     json.permissions = this.#permissions;
@@ -830,7 +911,7 @@ export class Job<
   }
 }
 
-export type AnyJob = Job<any>;
+export type AnyJob = ReplaceMethods<Job<any>>;
 export type ConcurrentOptions = ConcurrentProps | ExpressionValue<string>;
 
 type DefaultOutputOptions = Record<string, ExpressionValue<string>>;
@@ -910,27 +991,28 @@ type SecretsInput =
 
 type StepCreator<Base extends ActionTemplate, OutputStep extends AnyStep> =
   | ((
-    step: Step<WithStep<Base>>,
-    ctx: Contextify<ActionData<Base>>,
+    step: Step<Base>,
   ) => OutputStep)
   | OutputStep;
 type StepsCreator<Base extends ActionTemplate, OutputStep extends AnyStep> =
   | ((
-    step: Step<WithStep<Base>>,
+    step: Step<Base>,
     ctx: Contextify<ActionData<Base>>,
   ) => OutputStep[])
   | OutputStep[];
-type GetStepId<Type extends AnyStep> = Type extends
-  Step<infer Base extends ActionTemplate> ? Base["stepId"]
+type GetStepId<Type> = Type extends Step<infer Base extends ActionTemplate>
+  ? Base["stepId"] extends string ? Base["stepId"] : never
   : never;
 
 type GetStepOutputs<Type extends AnyStep> = unknown extends
   GetTemplate<Type>["stepOutputs"] ? never
   : GetTemplate<Type>["stepOutputs"];
 
-type GetStepEnv<Type extends AnyStep> = unknown extends
-  GetTemplate<Type>["hoistEnv"] ? never
-  : { env: GetTemplate<Type>["hoistEnv"] };
+type GetStepEnv<Type extends AnyStep> = Type extends
+  Step<infer Base extends ActionTemplate>
+  ? unknown extends Base["hoistEnv"] ? never
+  : { env: Base["hoistEnv"] }
+  : never;
 
 type GetSteps<
   Base extends ActionTemplate,
@@ -940,4 +1022,14 @@ type GetSteps<
   ? S extends AnyStep
     ? StepOutput<GetStepId<S>, GetStepOutputs<S>> | GetStepEnv<S>
   : never
+  : never;
+
+type ExtractFromWorkflow<W> = W extends Workflow<infer Base> ? 
+    | {
+      jobOutputs: NonNullable<Base["outputs"]>;
+      secrets: NonNullable<Base["secrets"]>;
+      inputs: NonNullable<Base["inputs"]>;
+    }
+    | PickInputs<Base>
+    | PickSecrets<Base>
   : never;

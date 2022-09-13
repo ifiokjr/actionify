@@ -18,7 +18,7 @@ for await (
     await generate(workflows);
 
     for await (const entry of Deno.readDir(workflows.rootDirectory)) {
-      if (!entry.isFile) {
+      if (!entry.isFile || !entry.name.endsWith(".yml")) {
         continue;
       }
 

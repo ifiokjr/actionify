@@ -36,6 +36,7 @@ const testJob = job()
   .step((step) => {
     return step
       .name("🩺 Typecheck")
+      .if((ctx) => e.eq(ctx.matrix.os, Runner.UbuntuLatest))
       .run("deno task typecheck");
   })
   .step((step) => {
@@ -46,6 +47,7 @@ const testJob = job()
   .step((step) => {
     return step
       .name("📝 Docs")
+      .if((ctx) => e.eq(ctx.matrix.os, Runner.UbuntuLatest))
       .run("deno task test:docs");
   });
 

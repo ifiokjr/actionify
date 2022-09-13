@@ -1,6 +1,7 @@
-import { globber } from "./deps.ts";
+import { globber, parse } from "./deps.ts";
 import { cwd } from "./helpers.ts";
 
+const args = parse(Deno.args, { boolean: ["reload"] });
 const files: string[] = [];
 const entries = globber({
   cwd,
@@ -11,6 +12,7 @@ const entries = globber({
     "src/",
     "tests/",
     ".github/",
+    "examples/",
     // TODO(@ifiokjr): enabling causes a type check error
     // "deploy/",
   ],
@@ -23,8 +25,10 @@ for await (const entry of entries) {
   files.push(entry.absolute);
 }
 
+const reload = args.reload ? ["-r"] : [];
+
 const result = await Deno.run({
-  cmd: ["deno", "--unstable", "check", ...files],
+  cmd: ["deno", "check", ...reload, ...files],
   stdout: "inherit",
   stdin: "inherit",
   stderr: "inherit",

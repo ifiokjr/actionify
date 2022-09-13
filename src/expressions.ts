@@ -1,5 +1,5 @@
 import { Context, proxy } from "./context.ts";
-import { ActionData, ActionTemplate, BaseContext, WithStep } from "./types.ts";
+import { ActionData, ActionTemplate, BaseContext } from "./types.ts";
 
 /**
  * An expression which is evaluated within the github action context.
@@ -357,26 +357,13 @@ export function context<
  *
  * This doesn't guarantee type safety.
  */
-export const ctx = context<WithStep<ActionTemplate>>();
+export const ctx = context<ActionTemplate>();
 
 export type Contextify<Data> = {
   [Key in keyof Data]: Context<Data[Key]>;
 };
 
-export type ContextFunction<
-  Type,
-  Base extends ActionTemplate = ActionTemplate,
-> = (ctx: Contextify<ActionData<Base>>) => Type;
-export type WithContext<
-  Type,
-  Base extends ActionTemplate = ActionTemplate,
-> =
-  | Type
-  | ContextFunction<Type, Base>;
-
 type SupportedPrimitives = number | null | string | boolean;
-type A = ExtractPrimitive<unknown>;
-type B = unknown extends string ? "true" : "false";
 type ExtractPrimitive<Type> = Type extends Array<infer T>
   ? T extends SupportedPrimitives ? T[] : never
   : Extract<Type, SupportedPrimitives>;
