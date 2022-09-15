@@ -26,7 +26,22 @@ export default function Home(props: PageProps<Props>) {
       data-dark-theme="dark"
       class={tw`p-7 markdown-body container m-auto`}
     >
-      <h1>actionify@{Meta.VERSION}</h1>
+      <div class={tw`flex w-full justify-between mb-8 gap-4`}>
+        <h1>
+          <code>actionify@{Meta.VERSION}</code>
+        </h1>
+        <div class={tw``}>
+          <a href="https://github.com/ifiokjr/actionify">
+            <img
+              width="150"
+              height="150"
+              src="/logo.svg"
+              alt="svg logo"
+              title="SVG Logo"
+            />
+          </a>
+        </div>
+      </div>
       <div dangerouslySetInnerHTML={{ __html: props.data.markdown }} />
     </main>
   );
