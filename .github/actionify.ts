@@ -7,7 +7,7 @@ import {
   Shell,
   step,
   workflow,
-} from "https://deno.land/x/actionify@0.1.0/mod.ts";
+} from "https://deno.land/x/actionify@0.2.0/mod.ts";
 
 const deno = ["v1.24.x", "v1.x", "canary"];
 const os = [Runner.MacOSLatest, Runner.UbuntuLatest];

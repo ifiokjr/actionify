@@ -3,7 +3,7 @@ import {
   defineWorkflows,
   e,
   workflow,
-} from "https://deno.land/x/actionify@0.1.0/mod.ts";
+} from "https://deno.land/x/actionify@0.2.0/mod.ts";
 
 // This example is taken from
 // https://docs.github.com/en/actions/using-workflows/reusing-workflows#using-inputs-and-secrets-in-a-reusable-workflow

@@ -119,7 +119,7 @@ export class Job<
    * #### Requiring successful dependent jobs
    *
    * ```ts
-   * import { workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const ci = workflow({ name: "ci", fileName: "ci" })
    *   .job('a', (job) => job.name('A'))
@@ -153,7 +153,7 @@ export class Job<
    * more information, see "Contexts."
    *
    * ```ts
-   * import { workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow, e } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const ci = workflow({ name: "ci", fileName: "ci" })
    *   .job('firstJob', (job) => {
@@ -188,7 +188,7 @@ export class Job<
    * Otherwise, the job will be marked as skipped.
    *
    * ```ts
-   * import { workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow, e } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const ci = workflow({ name: "ci", fileName: "ci" })
    *   .on('push')
@@ -213,7 +213,7 @@ export class Job<
    * `.strategy()`.
    *
    * ```ts
-   * import { workflow, Runner } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow, Runner } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .job('setup', job => job.runsOn(Runner.UbuntuLatest))
@@ -237,7 +237,7 @@ export class Job<
    * not unintentionally specify any current or future GitHub-hosted runners.
    *
    * ```ts
-   * import { workflow, Runner } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow, Runner } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .job('setup', job => job.runsOn(['self-hosted', 'linux']));
@@ -264,7 +264,7 @@ export class Job<
    * ##### Using a single environment name
    *
    * ```ts
-   * import { workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .job('setup', job => job.environment('production'));
@@ -273,7 +273,7 @@ export class Job<
    * ##### Using environment name and URL
    *
    * ```ts
-   * import { workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .job('setup', job => job.environment({
@@ -288,7 +288,7 @@ export class Job<
    * ##### Using output as URL
    *
    * ```ts
-   * import { commands, e, workflow } from "https://deno.land/x/actionify@0.1.0/mod.ts";
+   * import { commands, e, workflow } from "https://deno.land/x/actionify@0.2.0/mod.ts";
    *
    * const ci = workflow({ name: "ci" })
    *   .job("setup", (job) => {
@@ -336,7 +336,7 @@ export class Job<
    * ##### Using concurrency and the default behavior
    *
    * ```ts
-   * import { workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow, e } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .on('push')
@@ -346,7 +346,7 @@ export class Job<
    * ##### Using concurrency to cancel any in-progress job or run
    *
    * ```ts
-   * import { workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow, e } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .on('push')
@@ -368,7 +368,7 @@ export class Job<
    * guaranteed to be both unique and defined for the run.
    *
    * ```ts
-   * import { workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow, e } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .on('push')
@@ -389,7 +389,7 @@ export class Job<
    * github.workflow property to build the concurrency group:
    *
    * ```ts
-   * import { workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow, e } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .on('push')
@@ -420,7 +420,7 @@ export class Job<
    * job executes.
    *
    * ```ts
-   * import { workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .job('myJob', job => {
@@ -456,7 +456,7 @@ export class Job<
    * ##### Set the default shell and working directory
    *
    * ```ts
-   * import { workflow } from "https://deno.land/x/actionify@0.1.0/mod.ts";
+   * import { workflow } from "https://deno.land/x/actionify@0.2.0/mod.ts";
    *
    * const ci = workflow({ name: "ci" })
    *   .on("push")
@@ -550,7 +550,7 @@ export class Job<
    * with node set to 15 to fail without failing the workflow run.
    *
    * ```ts
-   * import { workflow, e, Runner } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow, e, Runner } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci', })
    *   .job('job', (job) => {
@@ -683,7 +683,7 @@ export class Job<
    *   workflow is from the same commit as the caller workflow.
    *
    * ```ts
-   * import { workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .job('call-workflow-1-in-local-repo', (job) => {
@@ -725,7 +725,7 @@ export class Job<
    * context.
    *
    * ```ts
-   * import { workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .job('call-workflow', (job) => job
@@ -754,7 +754,7 @@ export class Job<
    * workflow.
    *
    * ```ts
-   * import { e, workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { e, workflow } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .on('push')
@@ -773,7 +773,7 @@ export class Job<
    * organization, or across organizations within the same enterprise.
    *
    * ```ts
-   * import { e, Runner, workflow } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { e, Runner, workflow } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .on('workflow_dispatch')

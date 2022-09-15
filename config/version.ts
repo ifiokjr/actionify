@@ -232,7 +232,6 @@ async function main() {
   if (!value) {
     log.warning("No version upgrade necessary.");
   } else {
-    console.log(value);
     await Promise.all([
       updateChangelog(value),
       updateMeta(value),

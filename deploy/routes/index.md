@@ -9,7 +9,7 @@ import dprint from "https://act.deno.dev/dprint/check@v2.1";
 import {
   defineWorkflows,
   workflow,
-} from "https://deno.land/x/actionify@0.1.0/mod.ts";
+} from "https://deno.land/x/actionify@0.2.0/mod.ts";
 
 const ci = workflow({ name: "ci" })
   .on("push")

@@ -78,7 +78,7 @@ export class Step<Base extends ActionTemplate = ActionTemplate>
    * action is unassigned.
 
    * ```ts
-   * import { Step, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { Step, e } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const step = Step
    *   .untyped()
@@ -96,7 +96,7 @@ export class Step<Base extends ActionTemplate = ActionTemplate>
    * The my backup step only runs when the previous step of a job fails.
    *
    * ```ts
-   * import { Job, e, Step } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { Job, e, Step } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const usesStep = Step
    *   .create()
@@ -124,7 +124,7 @@ export class Step<Base extends ActionTemplate = ActionTemplate>
    * empty string.
    *
    * ```ts
-   * import { Workflow, e } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { Workflow, e } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const workflow = Workflow
    *   .create({ name: "ci", fileName: "ci" })
@@ -185,7 +185,7 @@ export class Step<Base extends ActionTemplate = ActionTemplate>
    * ##### Using versioned actions
    *
    * ```ts
-   * import { Job } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { Job } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const job = Job
    *   .create()
@@ -218,7 +218,7 @@ export class Step<Base extends ActionTemplate = ActionTemplate>
    * same shell.
    *
    * ```ts
-   * import { Step } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { Step } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const step = Step
    *   .create()
@@ -244,7 +244,7 @@ export class Step<Base extends ActionTemplate = ActionTemplate>
    * in the `run` keyword.
    *
    * ```ts
-   * import { Step } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { Step } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const step = Step
    *   .create()
@@ -262,7 +262,7 @@ export class Step<Base extends ActionTemplate = ActionTemplate>
    * of where to run the command.
    *
    * ```ts
-   * import { Step } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+   * import { Step } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
    *
    * const step = Step
    *   .create()

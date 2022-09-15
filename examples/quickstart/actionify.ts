@@ -3,7 +3,7 @@ import {
   e,
   step,
   workflow,
-} from "https://deno.land/x/actionify@0.1.0/mod.ts";
+} from "https://deno.land/x/actionify@0.2.0/mod.ts";
 
 const ciWorkflow = workflow({ name: "GitHub Actions Demo", fileName: "ci" })
   .on("push")

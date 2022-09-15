@@ -2,7 +2,11 @@
 
 ## Unreleased
 
-> [Compare](https://github.com/ifiokjr/actionify/compare/0.1.0...HEAD)
+> [Compare](https://github.com/ifiokjr/actionify/compare/0.2.0...HEAD)
+
+## 0.2.0
+
+> [2022-09-15](https://github.com/ifiokjr/actionify/compare/0.1.0...0.2.0)
 
 ### 🎉 Features
 
