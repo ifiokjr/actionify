@@ -30,7 +30,6 @@ export const handler: Handlers = {
       : repo
       ? `${ACTIONS_PREFIX}${org}/`
       : `${ACTIONS_PREFIX}`;
-    console.log({ stringToReplace, org, repo, version, prefix });
     const result = await blaze
       .listFileNames({ bucketId, prefix, delimiter, maxFileCount });
 
@@ -39,7 +38,6 @@ export const handler: Handlers = {
     }
 
     const items = result.data.files.map((file) => {
-      console.log({ fileName: file.fileName });
       return file.fileName
         .replace(stringToReplace, "")
         .replace(/\/$/, "");
