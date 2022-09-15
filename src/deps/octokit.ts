@@ -3,8 +3,6 @@ import { paginateRest } from "https://cdn.skypack.dev/@octokit/plugin-paginate-r
 import { restEndpointMethods } from "https://cdn.skypack.dev/@octokit/plugin-rest-endpoint-methods@6.4.1?dts";
 import { retry } from "https://cdn.skypack.dev/@octokit/plugin-retry@3.0.9?dts";
 import { throttling } from "https://cdn.skypack.dev/@octokit/plugin-throttling@4.3.0?dts";
-export * from "https://cdn.skypack.dev/@octokit/webhooks-types@6.3.6?dts";
-export { type EmitterWebhookEvent } from "https://cdn.skypack.dev/@octokit/webhooks@10.1.5?dts";
 import { NAME, VERSION } from "../meta.ts";
 
 export const Octokit = OctokitCore.plugin(

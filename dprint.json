@@ -15,7 +15,7 @@
   "includes": [
     "**/*.{ts,tsx,js,jsx,cjs,mjs,json,jsonc,md,toml,dockerfile}"
   ],
-  "excludes": ["**/snapshots"],
+  "excludes": ["**/fixtures", "./deploy/vendor/**", "**/snapshots"],
   "plugins": [
     "https://plugins.dprint.dev/typescript-0.73.1.wasm",
     "https://plugins.dprint.dev/json-0.15.6.wasm",

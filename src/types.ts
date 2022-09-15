@@ -3,7 +3,7 @@ import type {
   EventPayloadMap,
   WebhookEventMap,
   WebhookEventName,
-} from "./deps/octokit.ts";
+} from "./deps/octokit-types.ts";
 import type {
   Simplify,
   StringKeyOf,

@@ -29,7 +29,7 @@ for await (
       );
     }
 
-    const entries = Object.entries(content).sort((a, z) => {
+    const entries = [...content.entries()].sort((a, z) => {
       return a[0].localeCompare(z[0]);
     });
 

@@ -49,14 +49,13 @@ export type AnyCommand = Command<any>;
  * this command in the log.
  *
  * ```ts
- * import { Step, commands } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+ * import { step, commands } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
  *
- * const step = Step
- *   .create()
- *   .run(commands.setDebug('This is a debug message'));
+ * const exampleStep = step()
+ *   .run(commands.debug('This is a debug message'));
  * ```
  */
-export function setDebug(
+export function debug(
   message: ExpressionValue,
 ): Command<DefaultCommandTypes> {
   return Command.create(`echo ::debug::${message}`);
@@ -101,11 +100,10 @@ interface NoticeOptions {
  * the file.
  *
  * ```ts
- * import { Step, commands } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+ * import { step, commands } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
  *
- * const step = Step
- *   .create()
- *   .run(commands.setNotice(
+ * const exampleStep = step()
+ *   .run(commands.notice(
  *     'This is a notice', {
  *       file: 'app.js',
  *       line: 1,
@@ -114,7 +112,7 @@ interface NoticeOptions {
  *   }));
  * ```
  */
-export function setNotice(
+export function notice(
   message: ExpressionValue,
   options: NoticeOptions = {},
 ): Command<DefaultCommandTypes> {
@@ -130,11 +128,10 @@ export function setNotice(
  * within the file.
  *
  * ```ts
- * import { Step, commands } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+ * import { step, commands } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
  *
- * const step = Step
- *   .create()
- *   .run(commands.setWarning(
+ * const exampleStep = step()
+ *   .run(commands.warning(
  *     'This is a warning', {
  *       file: 'app.js',
  *       line: 1,
@@ -143,7 +140,7 @@ export function setNotice(
  *   }));
  * ```
  */
-export function setWarning(
+export function warning(
   message: ExpressionValue,
   options: NoticeOptions = {},
 ): Command<DefaultCommandTypes> {
@@ -159,11 +156,10 @@ export function setWarning(
  * the file.
  *
  * ```ts
- * import { Step, commands } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+ * import { step, commands } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
  *
- * const step = Step
- *   .create()
- *   .run(commands.setError(
+ * const exampleStep = step()
+ *   .run(commands.error(
  *     'This is an error', {
  *       file: 'app.js',
  *       line: 1,
@@ -172,7 +168,7 @@ export function setWarning(
  *   }));
  * ```
  */
-export function setError(
+export function error(
   message: ExpressionValue,
   options: NoticeOptions = {},
 ): Command<DefaultCommandTypes> {
@@ -190,17 +186,18 @@ export function setError(
  * an output.
  *
  * ```ts
- * import { Step, commands } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+ * import { step, commands } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
  *
- * const step = Step
- *   .create()
+ * const exampleStep = step()
  *   .run([
- *     commands.setMask('$SOME_SECRET'),
- *     commands.setMask('hide me'),
+ *     commands.setSecret('$SOME_SECRET'),
+ *     commands.setSecret('hide me'),
  *   ]);
  * ```
  */
-export function setMask(value: ExpressionValue): Command<DefaultCommandTypes> {
+export function setSecret(
+  value: ExpressionValue,
+): Command<DefaultCommandTypes> {
   return Command.create(`echo ::add-mask::${value}`);
 }
 
@@ -208,10 +205,9 @@ export function setMask(value: ExpressionValue): Command<DefaultCommandTypes> {
  * Sets an action's output parameter.
  *
  * ```ts
- * import { commands, e, Step } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
+ * import { commands, e, step } from 'https://deno.land/x/actionify@0.1.0/mod.ts';
  *
- * const step = Step
- *   .create()
+ * const exampleStep = step()
  *   .run(commands.setOutput(
  *     'variableName',
  *     e.hashFiles('**package.json'),
@@ -233,10 +229,9 @@ export function setOutput<Output extends string>(
  * This can be used to run multiple commands in a single run command.
  *
  * ```ts
- * import { commands, e, Step } from "https://deno.land/x/actionify@0.1.0/mod.ts";
+ * import { commands, e, step } from "https://deno.land/x/actionify@0.1.0/mod.ts";
  *
- * const step = Step
- *   .create()
+ * const exampleStep = step()
  *   .run(commands.group("My group", [
  *     commands.setOutput(
  *       "variableName",
@@ -300,7 +295,7 @@ export function exportVariable<Env extends string>(
  * If `isDynamic` is set to `true` the provided value is not wrapped in quotes
  * and will be run as an expression.
  */
-export function setMultilineEnv<Env extends string>(
+export function exportMultilineVariable<Env extends string>(
   name: Env,
   value: ExpressionValue,
   isDynamic = false,

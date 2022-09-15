@@ -76,6 +76,24 @@ const caller = workflow({
       .secrets({ envPAT: "amazing" })
       // 8. Pass the inputs into the called workflow.
       .with({ username: "me", password: "secure" });
+  })
+  .job("useCalledWorkflowOutputs", (job) => {
+    return job
+      .runsOn("ubuntu-latest")
+      .name("Use the outputs from previous reusable workflow")
+      .needs("callWorkflow")
+      .step((step) => {
+        return step
+          .run((ctx) => {
+            return commands.debug(
+              e.concat(
+                ctx.needs.callWorkflow.outputs.firstWord,
+                " ",
+                ctx.needs.callWorkflow.outputs.firstWord,
+              ),
+            );
+          });
+      });
   });
 
 export default defineWorkflows({

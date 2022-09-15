@@ -47,7 +47,7 @@ export class Step<Base extends ActionTemplate = ActionTemplate>
   #run: string | undefined;
   #shell: string | undefined;
   #workingDirectory: ExpressionValue | undefined;
-  #with: Record<string, ExpressionValue> | undefined;
+  #with: object | undefined;
   #env: Record<string, ExpressionValue<string>> | undefined;
   #continueOnError: ExpressionValue | undefined;
   #timeoutMinutes: ExpressionValue<number> | undefined;
@@ -286,7 +286,13 @@ export class Step<Base extends ActionTemplate = ActionTemplate>
    * is a key/value pair. Input parameters are set as environment variables. The
    * variable is prefixed with INPUT_ and converted to upper case.
    */
-  with(props: WithContext<WithProps, Base, "jobs:jobId:steps:with">) {
+  with(
+    props: WithContext<
+      Record<string, ExpressionValue> & DefaultStepInputs,
+      Base,
+      "jobs:jobId:steps:with"
+    >,
+  ) {
     this.#with = getFromContext(props);
     return this;
   }
@@ -393,16 +399,7 @@ export type ExtractCommand<C extends AnyCommand> = C extends Command<infer T> //
   ? { stepOutputs: T["output"] } | { hoistEnv: T["env"]; env: T["env"] }
   : never;
 
-// type GetOutputs<Type> = Type extends Command<infer Output extends string, any>
-//   ? { stepOutputs: Output }
-//   : never;
-// type GetJobEnv<Type> = Type extends Command<any, infer Env extends string>
-//   ? { hoistEnv: Env }
-//   : never;
-
-interface WithProps {
-  [key: string]: ExpressionValue;
-
+export interface DefaultStepInputs {
   /**
    * A string that defines the inputs for a Docker container. GitHub passes the
    * args to the container's ENTRYPOINT when the container starts up. An array

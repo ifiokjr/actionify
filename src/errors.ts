@@ -19,3 +19,7 @@ export class WorkflowError extends Error {
 export class StepError extends Error {
   override name = "StepError";
 }
+
+export class GitHubActionError extends Error {
+  override name = "GitHubActionError";
+}

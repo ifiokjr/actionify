@@ -16,3 +16,11 @@ jobs:
       password: secure
     secrets:
       envPAT: amazing
+  useCalledWorkflowOutputs:
+    name: Use the outputs from previous reusable workflow
+    needs: callWorkflow
+    runs-on: ubuntu-latest
+    steps:
+      - run: >-
+          echo ::debug::${{ needs.callWorkflow.outputs.firstWord }} ${{
+          needs.callWorkflow.outputs.firstWord }}

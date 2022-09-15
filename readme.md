@@ -219,14 +219,14 @@ The main reason I created this project is to have type-safe control over GitHub 
 This could be fulfilled via a deno registry deployment allowing for remote actions to be imported and used in a type-safe way.
 
 ```ts
-import actionsCheckout from "https://act.deno.dev/actions/checkout";
+import checkout from "https://act.deno.dev/actions/checkout@3.0.2";
 import {
   defineWorkflows,
   e,
   workflow,
 } from "https://deno.land/x/actionify@0.1.0/mod.ts";
 
-const checkoutStep = actionsCheckout((ctx) => ({
+const checkoutStep = checkout((ctx) => ({
   repository: e.wrap(ctx.github.repository),
   ref: e.wrap(ctx.github.ref),
   token: e.wrap(ctx.github.token),

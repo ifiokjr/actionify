@@ -14,7 +14,7 @@
     "test:coverage": "deno test --coverage=coverage --unstable -A",
     "test:docs": "deno run -A ./config/test_docs.ts",
     "test:snapshot": "deno test --unstable -A -- -u",
-    "test:watch": "deno test --unstable -A --watch",
+    "test:watch": "deno test --unstable -A --watch .",
     "test": "deno test --unstable -A",
     "typecheck": "deno run --unstable -A config/typecheck.ts",
     "update:deps": "deno run --allow-net --allow-read --allow-write config/update.ts",
@@ -33,10 +33,7 @@
   "lint": {
     "files": {
       "include": ["./"],
-      "exclude": [
-        // "**/fixtures",
-        "**/snapshots"
-      ]
+      "exclude": ["**/fixtures", "./deploy/vendor/**", "**/snapshots"]
     },
     "rules": {
       "tags": ["recommended"],

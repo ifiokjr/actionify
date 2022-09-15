@@ -1,4 +1,4 @@
-`actionify` makes maintaining GitHub Actions easier. It is written in TypeScript and runs on deno. Every publicly versioned GitHub action is available here as a remote action.
+[`actionify`](https://github.com/ifiokjr/actionify) makes maintaining GitHub Actions easier. It is written in TypeScript and runs on deno. Every publicly versioned GitHub action is available here as a remote action.
 
 Below is an example of importing actions to build and format your project.
 
@@ -23,3 +23,9 @@ const ci = workflow({ name: "ci" })
 
 export default defineWorkflows({ workflows: [ci] });
 ```
+
+### ⚠️ Warning
+
+This project is currently in early development and may see breaking changes before reaching v1.0.0. Please be aware of this.
+
+Once v1.0.0 is released, breaking changes will be avoided as much as possible and the API will be considered stable. All breaking changes will be prefixed with a leading `/v1` in the import path.
