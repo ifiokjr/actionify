@@ -149,3 +149,5 @@ tmp**
 **/tmp.*
 temp.*
 **/temp.*
+
+.DS_Store

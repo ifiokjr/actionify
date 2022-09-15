@@ -1,6 +1,30 @@
-# actionify
+<p align="center">
+  <a href="#">
+    <img width="300" height="300" src="./deploy/static/logo.svg" alt="svg logo" title="SVG Logo" />
+  </a>
+</p>
 
-> Create TypeSafe GitHub actions.
+<br />
+
+<p align="center">
+  <h1 align="center">
+    actionify
+  </h1>
+</p>
+
+<br />
+
+<p align="center">
+  <em>Create TypeSafe GitHub actions</em>
+</p>
+
+<br />
+
+<p align="center">
+  <a href="https://github.com/ifiokjr/actionify/actions?query=workflow:ci">
+    <img src="https://github.com/ifiokjr/actionify/workflows/ci/badge.svg?branch=main" alt="Continuous integration badge for github actions" title="CI Badge" />
+  </a>
+</p>
 
 - [actionify](#actionify)
   - [Why?](#why)

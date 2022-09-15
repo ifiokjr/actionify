@@ -5,6 +5,7 @@
     "exactOptionalPropertyTypes": true,
     "noImplicitOverride": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "preact"
+    "jsxImportSource": "preact",
+    "jsxFragmentFactory": "Fragment"
   }
 }
