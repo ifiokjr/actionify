@@ -1,18 +1,33 @@
-import Counter from "../islands/Counter.tsx";
+import { Handlers, PageProps } from "$fresh/server.ts";
+import { tw } from "twind";
+import { Meta } from "../../mod.ts";
+import { render } from "../deps/markdown.ts";
 
-export default function Home() {
+interface Props {
+  markdown: string;
+}
+
+export const handler: Handlers<Props> = {
+  async GET(req, ctx) {
+    const url = new URL(req.url);
+    const response = await fetch(import.meta.resolve("./index.md"));
+    const text = await response.text();
+    const markdown = render(text, { baseUrl: url.origin, allowIframes: false });
+
+    return ctx.render({ markdown });
+  },
+};
+
+export default function Home(props: PageProps<Props>) {
   return (
-    <div class="p-4 mx-auto max-w-screen-md">
-      <img
-        src="/logo.svg"
-        class="w-32 h-32"
-        alt="the fresh logo: a sliced lemon dripping with juice"
-      />
-      <p class="my-6">
-        Welcome to `fresh`. Try updating this message in the ./routes/index.tsx
-        file, and refresh.
-      </p>
-      <Counter start={3} />
-    </div>
+    <main
+      data-color-mode="light"
+      data-light-theme="light"
+      data-dark-theme="dark"
+      class={tw`p-7 markdown-body container m-auto`}
+    >
+      <h1>actionify@{Meta.VERSION}</h1>
+      <div dangerouslySetInnerHTML={{ __html: props.data.markdown }} />
+    </main>
   );
 }

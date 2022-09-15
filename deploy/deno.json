@@ -1,6 +1,9 @@
 {
   "importMap": "../import_map.json",
   "compilerOptions": {
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
     "jsx": "react-jsx",
     "jsxImportSource": "preact"
   }
