@@ -41,6 +41,8 @@ interface ChangelogVersion {
    * The new version.
    */
   version: string;
+
+  type: "major" | "minor" | "patch";
 }
 
 /**
@@ -123,7 +125,7 @@ export async function getChangelogVersion(
           words.some((word) => token.content.includes(word)) &&
           (
             !versionChange ||
-            RELEASES.indexOf(name) > RELEASES.indexOf(versionChange)
+            RELEASES.indexOf(name) < RELEASES.indexOf(versionChange)
           )
         ) {
           versionChange = name;
@@ -152,7 +154,7 @@ export async function getChangelogVersion(
 
   const version = semver.inc(Meta.VERSION, versionChange) ?? undefined;
 
-  return version ? { version, contents, path } : undefined;
+  return version ? { version, contents, path, type: versionChange } : undefined;
 }
 
 /**
@@ -194,7 +196,7 @@ async function updateMeta(props: ChangelogVersion) {
 async function updateMarkdownFiles(props: ChangelogVersion) {
   const iterator = globber({
     cwd,
-    exclude: ["changelog.md"],
+    exclude: ["changelog.md", "versions/*.ts"],
     caseInsensitive: true,
     dot: true,
     extensions: [".md", ".json", ".ts"],
@@ -218,17 +220,42 @@ async function updateMarkdownFiles(props: ChangelogVersion) {
   await Promise.all(promises);
 }
 
+const emoji = {
+  major: "🚀",
+  minor: "✨",
+  patch: "🐛",
+};
+
 async function main() {
   const value = await getChangelogVersion(cwd);
 
   if (!value) {
     log.warning("No version upgrade necessary.");
   } else {
+    console.log(value);
     await Promise.all([
       updateChangelog(value),
       updateMeta(value),
       updateMarkdownFiles(value),
     ]);
+
+    await Deno.run({
+      cwd: cwd.pathname,
+      cmd: ["deno", "task", "test:snapshot"],
+    })
+      .status();
+    await Deno.run({ cwd: cwd.pathname, cmd: ["deno", "task", "fix"] })
+      .status();
+
+    await Deno.run({
+      cwd: cwd.pathname,
+      cmd: [
+        "git",
+        "commit",
+        "-am",
+        `chore: version \`${value.version}\` ${emoji[value.type]}`,
+      ],
+    }).status();
   }
 }
 
