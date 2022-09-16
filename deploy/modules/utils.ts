@@ -5,7 +5,7 @@ export const ACTIONS_PREFIX = "_actions/";
 const accepted = ["text/html", "application/xhtml+xml", "application/xml"];
 
 export function supportsHtmlResponse(headers: Headers) {
-  return accepted.includes(headers.get("Accept") ?? "");
+  return accepted.some((text) => headers.get("Accept")?.includes(text));
 }
 
 interface TransformResponseProps {
@@ -14,10 +14,11 @@ interface TransformResponseProps {
   org: string;
   repo: string;
   version: string;
+  supportHtml: boolean;
 }
 
 export function transformResponse(props: TransformResponseProps) {
-  const { response, shouldCache, org, repo, version } = props;
+  const { response, shouldCache, org, repo, version, supportHtml } = props;
   const headers = new Headers(response.headers);
   if (shouldCache) {
     headers.set(
@@ -28,6 +29,14 @@ export function transformResponse(props: TransformResponseProps) {
     headers.set("Cache-Control", "no-cache");
   }
 
+  headers.set("Vary", "Origin, Accept-Encoding, User-Agent");
+
+  if (supportHtml) {
+    headers.set("Content-Type", "application/javascript; charset=utf-8");
+  } else {
+    headers.set("Content-Type", "application/typescript; charset=utf-8");
+  }
+
   headers.set("Accept-Ranges", "bytes");
   headers.set("Access-Control-Allow-Origin", "*");
   headers.set(
@@ -36,7 +45,7 @@ export function transformResponse(props: TransformResponseProps) {
   );
   headers.set(
     "Content-Disposition",
-    `inline; filename=${org}_${repo}@${version}.ts`,
+    `inline; filename=${org}__${repo}@${version}.ts`,
   );
 
   return new Response(response.body, { headers, status: 200 });

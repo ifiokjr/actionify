@@ -4,6 +4,8 @@ import { GitHubActionError } from "../errors.ts";
 import { NAME, VERSION } from "../meta.ts";
 import { GitHubAction } from "./types.ts";
 
+const [MAJOR_VERSION = "0"] = VERSION.split(".");
+
 export async function generateTypeScriptFromAction(
   url: URL | string,
   uses: string,
@@ -36,7 +38,7 @@ import {
   e,
   step,
   type WithContext,
-} from "https://deno.land/x/${NAME}@${VERSION}/mod.ts";
+} from "https://deno.land/x/${NAME}@${VERSION}/versions/${MAJOR_VERSION}.ts";
 ${props.interface}
 /** ${defaultDescription} */
 export default function ${defaultFunctionName}<Base extends ActionTemplate = ActionTemplate>(${props.inputs}) {

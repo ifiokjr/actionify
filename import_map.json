@@ -12,6 +12,7 @@
     "https://deno.land/std@0.150.0/": "https://deno.land/std@0.155.0/",
     "https://deno.land/std@0.153.0/": "https://deno.land/std@0.155.0/",
     "https://deno.land/std@0.154.0/": "https://deno.land/std@0.155.0/",
+    "https://deno.land/std@0.155.0/": "https://deno.land/std@0.155.0/",
     "@preact/signals-core": "https://esm.sh/*@preact/signals-core@1.0.1",
     "meilisearch": "https://cdn.skypack.dev/meilisearch@0.27.0?dts",
     "@preact/signals": "https://esm.sh/*@preact/signals@1.0.3",

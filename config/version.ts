@@ -196,7 +196,7 @@ async function updateMeta(props: ChangelogVersion) {
 async function updateMarkdownFiles(props: ChangelogVersion) {
   const iterator = globber({
     cwd,
-    exclude: ["changelog.md", "versions/*.ts"],
+    exclude: ["changelog.md"],
     caseInsensitive: true,
     dot: true,
     extensions: [".md", ".json", ".ts"],

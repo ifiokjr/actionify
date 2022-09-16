@@ -27,8 +27,7 @@ const configV2: RegistryConfig = {
   version: 2,
   registries: [
     {
-      schema:
-        "/_completions/v0/:org([a-z][a-z0-9_]+)/:repo([a-z][a-z0-9_]+){@:version}?",
+      schema: "{/v0}?/:org/:repo{@:version}?",
       variables: [
         {
           key: "org",

@@ -7,7 +7,11 @@ import {
   getFilesList,
   getLatestVersion,
 } from "../modules/jsdelivr.ts";
-import { ACTIONS_PREFIX, transformResponse } from "../modules/utils.ts";
+import {
+  ACTIONS_PREFIX,
+  supportsHtmlResponse,
+  transformResponse,
+} from "../modules/utils.ts";
 
 const bucketId = env.BACKBLAZE_BUCKET_ID;
 const bucketName = env.BACKBLAZE_BUCKET_NAME;
@@ -16,6 +20,7 @@ const applicationKeyId = env.BACKBLAZE_ID;
 
 export const handler: Handlers = {
   async GET(req, ctx) {
+    const supportHtml = supportsHtmlResponse(req.headers);
     let { org, repo, version } = ctx.params;
     let shouldCache = true;
 
@@ -27,7 +32,10 @@ export const handler: Handlers = {
     }
 
     if (!org || !repo) {
-      return new Response("Must both org and repository", { status: 404 });
+      return new Response(
+        "Must supply both GitHub `organisation` and `repository`",
+        { status: 404 },
+      );
     }
 
     if (!version) {
@@ -37,6 +45,9 @@ export const handler: Handlers = {
       if (!version) {
         // TODO(@ifiokjr) better error handling here for no recognised version
         return new Response("No recognized versions", { status: 404 });
+      } else {
+        const location = new URL(`${url.pathname}@${version}`, url.origin).href;
+        return new Response(null, { status: 302, headers: { location } });
       }
     }
 
@@ -68,6 +79,7 @@ export const handler: Handlers = {
         org,
         repo,
         version,
+        supportHtml,
       });
     }
 
@@ -105,11 +117,18 @@ export const handler: Handlers = {
     }
 
     const response = await fetch(blaze.fileUrl(bucketName, fileName));
-    return transformResponse({ response, shouldCache, org, repo, version });
+    return transformResponse({
+      response,
+      shouldCache,
+      org,
+      repo,
+      version,
+      supportHtml,
+    });
   },
 };
 
 export const config: RouteConfig = {
   routeOverride:
-    "{/v0}?/:org([a-z][a-z0-9_]+)/:repo([a-z][a-z0-9_]+){@:version}?",
+    "{/v0}?/:org([a-z][a-z0-9_-]+)/:repo([a-z][a-z0-9_-]+){@:version}?",
 };

@@ -4,6 +4,38 @@
 
 > [Compare](https://github.com/ifiokjr/actionify/compare/0.2.0...HEAD)
 
+### Breaking 💥
+
+- Deprecate `job().step()` in favour of `job().steps()`
+- `job.steps()` now takes a spread of jobs as arguments rather than an array.
+
+  ```ts
+  import { job } from 'https://deno.land/x/actionify@0.3.0/mod.ts';
+
+  const newApiJob = job()
+    .runsOn('ubuntu-latest')
+    // Multiple steps can be added as arguments
+    .steps(
+      step().run('echo "Hello World"'),
+      step().run('echo "The job was automatically triggered by a ${{ github.event_name }} event."'),
+      step().run('echo "This job is now running on a ${{ runner.os }} server hosted by GitHub!"'),
+      step().run('echo "The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."'),
+      step().name('Check out the repository code').uses('actions/checkout@v3'),
+      step().run('echo "The ${{ github.repository }} repository has been cloned to the runner."'),
+      step().run('echo "The workflow is now ready to test your code on the runner."'),
+      step().name('List files in your repository').run('ls -a'),
+      step().run((ctx) => `echo "This job's status is ${{ job.status }}."`),
+    );
+  ```
+
+### Features 🎉
+
+- When no version is supplied to `https://act.deno.dev/:org/:repo` auto redirect to the latest version.
+
+### Bug Fixes
+
+- Allow hyphens (`-`) in `https://act.deno.dev/:org/:repo` org and repo segment of deployment URLs. This was causing repositories like https://act.deno.dev/actions/setup-node to fail.
+
 ## 0.2.0
 
 > [2022-09-15](https://github.com/ifiokjr/actionify/compare/0.1.0...0.2.0)

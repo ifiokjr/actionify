@@ -1,6 +1,5 @@
 import { Meta } from "../mod.ts";
-import { globber } from "./deps.ts";
-import { getLogger, semver } from "./deps.ts";
+import { getLogger, globber, semver } from "./deps.ts";
 import { coreActions } from "./deps/github.ts";
 import {
   cwd,

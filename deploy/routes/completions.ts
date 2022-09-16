@@ -50,5 +50,5 @@ export const handler: Handlers = {
 };
 
 export const config: RouteConfig = {
-  routeOverride: "/_completions/v0/:org([a-z][a-z0-9_]+){/:repo}?{/:version}?",
+  routeOverride: "/_completions/v0/api/:org{/:repo}?{/:version}?",
 };

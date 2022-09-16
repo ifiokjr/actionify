@@ -13,5 +13,6 @@ import { markdownPlugin } from "./markdown_plugin.ts";
 import twindConfig from "./twind.config.ts";
 
 await start(manifest, {
+  port: 3000,
   plugins: [twindPlugin(twindConfig), markdownPlugin()],
 });
