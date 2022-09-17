@@ -7,7 +7,7 @@ import {
   e,
   step,
   type WithContext,
-} from "https://deno.land/x/actionify@0.2.0/mod.ts";
+} from "https://deno.land/x/actionify@0.3.0/mod.ts";
 
 export interface CacheInputs extends DefaultStepInputs {
   /** A list of files, directories, and wildcard patterns to cache and restore */
@@ -43,7 +43,7 @@ import {
   e,
   step,
   type WithContext,
-} from "https://deno.land/x/actionify@0.2.0/mod.ts";
+} from "https://deno.land/x/actionify@0.3.0/mod.ts";
 
 export interface CheckoutInputs extends DefaultStepInputs {
   /**

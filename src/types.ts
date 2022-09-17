@@ -1360,7 +1360,7 @@ export interface WorkflowOutput {
    *   defineWorkflows,
    *   e,
    *   Workflow,
-   * } from "https://deno.land/x/actionify@0.2.0/mod.ts";
+   * } from "https://deno.land/x/actionify@0.3.0/mod.ts";
    *
    * const main = Workflow
    *   .create({ name: "ci" })

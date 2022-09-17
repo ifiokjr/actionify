@@ -1,12 +1,10 @@
-import checkout from "https://act.deno.dev/v0/actions/checkout@3.0.2";
-
 import {
   defineWorkflows,
   e,
   Runner,
   Shell,
   workflow,
-} from "https://deno.land/x/actionify@0.2.0/mod.ts";
+} from "https://deno.land/x/actionify@0.3.0/mod.ts";
 
 const napi = workflow({ name: "napi" })
   .env({
@@ -42,7 +40,7 @@ const napi = workflow({ name: "napi" })
         e.concat("stable -", e.expr(ctx.matrix.settings.target), "- node@16")
       )
       .steps(
-        checkout(),
+        (step) => step.name("Checkout").uses("actions/checkout@3.0.2"),
         (step, ctx) => {
           return step
             .name("Setup node")

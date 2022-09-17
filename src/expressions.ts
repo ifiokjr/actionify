@@ -110,7 +110,7 @@ export function is<Event extends WorkflowEventName>(
  * Retrieve the desired github event from the provided context.
  *
  * ```ts
- * import { e, job } from "https://deno.land/x/actionify@0.2.0/mod.ts";
+ * import { e, job } from "https://deno.land/x/actionify@0.3.0/mod.ts";
  * import checkout from "https://act.deno.dev/actions/checkout@3.0.2";
  *
  * const example = job()

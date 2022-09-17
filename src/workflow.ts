@@ -105,7 +105,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * made to any branch in the workflow's repository:
    *
    * ```ts
-   * import { workflow } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.3.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .on('push');
@@ -118,7 +118,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * the repository or when someone forks the repository:
    *
    * ```ts
-   * import { workflow } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.3.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .on('push')
@@ -142,7 +142,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * created but not when a label is edited or deleted.
    *
    * ```ts
-   * import { workflow } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.3.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .on('push')
@@ -158,7 +158,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * two issue labeled events.
    *
    * ```ts
-   * import { workflow } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.3.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .on('push')
@@ -245,7 +245,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * the available scopes:
    *
    * ```ts
-   * import { workflow } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.3.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .on('push')
@@ -255,7 +255,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * To disable permissions for all available scopes use the following:
    *
    * ```ts
-   * import { workflow } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.3.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .permissions(false)
@@ -288,7 +288,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * job executes.
    *
    * ```ts
-   * import { workflow } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.3.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .on('push')
@@ -330,7 +330,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * ##### Set the default shell and working directory
    *
    * ```ts
-   * import { workflow } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
+   * import { workflow } from 'https://deno.land/x/actionify@0.3.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .on('push')
@@ -361,7 +361,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * ##### Using concurrency and the default behavior
    *
    * ```ts
-   * import { workflow, e } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
+   * import { workflow, e } from 'https://deno.land/x/actionify@0.3.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .on('push')
@@ -371,7 +371,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * ##### Using concurrency to cancel any in-progress job or run
    *
    * ```ts
-   * import { workflow, e } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
+   * import { workflow, e } from 'https://deno.land/x/actionify@0.3.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .on('push')
@@ -393,7 +393,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * guaranteed to be both unique and defined for the run.
    *
    * ```ts
-   * import { workflow, e } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
+   * import { workflow, e } from 'https://deno.land/x/actionify@0.3.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .on('push')
@@ -414,7 +414,7 @@ export class Workflow<Base extends ActionTemplate = ActionTemplate>
    * github.workflow property to build the concurrency group:
    *
    * ```ts
-   * import { workflow, e } from 'https://deno.land/x/actionify@0.2.0/mod.ts';
+   * import { workflow, e } from 'https://deno.land/x/actionify@0.3.0/mod.ts';
    *
    * const ci = workflow({ name: 'ci' })
    *   .on('push')

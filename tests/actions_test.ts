@@ -1,4 +1,4 @@
-import { generateTypeScriptFromAction } from "https://deno.land/x/actionify@0.2.0/mod.ts";
+import { generateTypeScriptFromAction } from "https://deno.land/x/actionify@0.3.0/mod.ts";
 import { emptyDir, ensureDir } from "../src/deps/fs.ts";
 import { assert } from "./deps.ts";
 import { snapshot } from "./helpers.ts";

@@ -27,7 +27,7 @@ try {
       ) => [key, path.startsWith("./") ? path.replace(/^\.\//, "../") : path]),
     ),
     "https://deno.land/x/actionify@<%=it.version%>/": cwd,
-    "https://deno.land/x/actionify@0.2.0/": cwd,
+    "https://deno.land/x/actionify@0.3.0/": cwd,
     [`https://deno.land/x/actionify@${Meta.VERSION}/`]: cwd,
   };
 

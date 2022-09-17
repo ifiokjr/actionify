@@ -11,6 +11,8 @@ const entries = globber({
   excludeDirectories: true,
 });
 
+const CI = !!Deno.env.get("CI");
+
 for await (const entry of entries) {
   deps.push(entry.relative);
 }
@@ -20,8 +22,11 @@ const baseCommand = [
   "cache",
   "--lock=lock.json",
   "--import-map=import_map.json",
-  "--reload",
 ];
+
+if (!CI) {
+  baseCommand.push("--reload");
+}
 
 async function update() {
   log.info("Updating the `lock.json` file.");
@@ -52,7 +57,7 @@ async function load() {
   if (!status.success) {
     const error = decoder.decode(stderr);
 
-    if (error.includes("No such file or directory") && !Deno.env.get("CI")) {
+    if (error.includes("No such file or directory") && !CI) {
       log.warning("No `lock.json` found. Creating a new one.");
       await update();
     } else {
