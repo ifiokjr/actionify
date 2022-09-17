@@ -1,7 +1,7 @@
 import { Handlers, RouteConfig } from "$fresh/server.ts";
 import { BackBlaze } from "../modules/backblaze.ts";
 import { env } from "../modules/env.ts";
-import { ACTIONS_PREFIX, json } from "../modules/utils.ts";
+import { json } from "../modules/utils.ts";
 
 const bucketId = env.BACKBLAZE_BUCKET_ID;
 const applicationKey = env.BACKBLAZE_SECRET;
@@ -21,15 +21,15 @@ export const handler: Handlers = {
     const blaze = new BackBlaze({ applicationKey, applicationKeyId });
     await blaze.authorizeAccount();
 
-    const prefix = `${ACTIONS_PREFIX}${org}${
+    const prefix = `meta/${org}${
       (repo || url.pathname.endsWith("/")) ? `/${repo}` : ""
     }${(version || url.pathname.endsWith("/")) && repo ? `/${version}` : ""}`;
 
     const stringToReplace = version
-      ? `${ACTIONS_PREFIX}${org}/${repo}/`
+      ? `meta/${org}/${repo}/`
       : repo
-      ? `${ACTIONS_PREFIX}${org}/`
-      : `${ACTIONS_PREFIX}`;
+      ? `meta/${org}/`
+      : `meta/`;
     const result = await blaze
       .listFileNames({ bucketId, prefix, delimiter, maxFileCount });
 
@@ -50,5 +50,5 @@ export const handler: Handlers = {
 };
 
 export const config: RouteConfig = {
-  routeOverride: "/_completions/v0/api/:org{/:repo}?{/:version}?",
+  routeOverride: "/completions/api/:org{/:repo}?{/:version}?",
 };

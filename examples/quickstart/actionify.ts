@@ -11,7 +11,7 @@ const ciWorkflow = workflow({ name: "GitHub Actions Demo", fileName: "ci" })
     return job
       .name("Explore Github Actions")
       .runsOn("ubuntu-latest")
-      .steps(generateSteps());
+      .steps(...generateSteps());
   });
 
 export default defineWorkflows({

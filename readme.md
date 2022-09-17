@@ -122,7 +122,7 @@ const ciWorkflow = workflow({ name: "GitHub Actions Demo", fileName: "ci" })
   .on("push")
   // Set the job and it's ID. The ID can be used to access the job context later.
   .job("Explore-GitHub-Actions", (job) => {
-    return job.steps(generateSteps());
+    return job.steps(...generateSteps());
   });
 
 // Create the configuration for the CI workflows. When the CLI is run this will be

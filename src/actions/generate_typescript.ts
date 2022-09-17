@@ -4,30 +4,43 @@ import { GitHubActionError } from "../errors.ts";
 import { NAME, VERSION } from "../meta.ts";
 import { GitHubAction } from "./types.ts";
 
-const [MAJOR_VERSION = "0"] = VERSION.split(".");
+interface GenerateTypeScriptFromActionProps {
+  url: URL | string;
+  uses: string;
+  version?: string;
+}
 
 export async function generateTypeScriptFromAction(
-  url: URL | string,
-  uses: string,
+  props: GenerateTypeScriptFromActionProps,
 ) {
+  const { url, uses, version = VERSION } = props;
   const response = await fetch(new URL(url));
   const test = await response.text();
-  const result = load(test);
+  const action = load(test);
 
-  if (!isGitHubAction(result)) {
+  if (!isGitHubAction(action)) {
     throw new GitHubActionError(
       `The yaml file at given URL is not valid: ${url}`,
     );
   }
+  const ts = convertToTypeScript({ action, uses, version });
 
-  return convertToTypeScript(result, uses);
+  return { ts, action };
 }
 
 function isGitHubAction(value: unknown): value is GitHubAction {
   return isObject(value) && isString(value.name) && isString(value.runs?.using);
 }
 
-function convertToTypeScript(action: GitHubAction, uses: string): string {
+interface ConvertToTypeScriptProps {
+  action: GitHubAction;
+  uses: string;
+  version?: string;
+}
+
+function convertToTypeScript(
+  { action, uses, version = VERSION }: ConvertToTypeScriptProps,
+): string {
   const props = getProps(action);
   const defaultFunctionName = camelCase(action.name);
   const defaultDescription = makeStringDocCommentSafe(action.description);
@@ -38,7 +51,7 @@ import {
   e,
   step,
   type WithContext,
-} from "https://deno.land/x/${NAME}@${VERSION}/versions/${MAJOR_VERSION}.ts";
+} from "https://deno.land/x/${NAME}@${version}/mod.ts";
 ${props.interface}
 /** ${defaultDescription} */
 export default function ${defaultFunctionName}<Base extends ActionTemplate = ActionTemplate>(${props.inputs}) {

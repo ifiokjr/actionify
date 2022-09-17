@@ -27,20 +27,20 @@ const configV2: RegistryConfig = {
   version: 2,
   registries: [
     {
-      schema: "{/v0}?/:org/:repo{@:version}?",
+      schema: "/:org/:repo{@:version}?",
       variables: [
         {
           key: "org",
-          url: `/_completions/v0/api/\${org}`,
+          url: `/completions/api/\${org}`,
         },
         {
           key: "repo",
-          url: `/_completions/v0/api/\${org}/\${repo}`,
+          url: `/completions/api/\${org}/\${repo}`,
         },
         {
           key: "version",
-          // documentation: `/_completions/v0/api/details/\${org}/\${{version}}`,
-          url: `/_completions/v0/api/\${org}/\${repo}/\${{version}}`,
+          // documentation: `/completions/api/details/\${org}/\${{version}}`,
+          url: `/completions/api/\${org}/\${repo}/\${{version}}`,
         },
       ],
     },

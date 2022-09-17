@@ -10,31 +10,43 @@
 - `job.steps()` now takes a spread of jobs as arguments rather than an array.
 
   ```ts
-  import { job } from 'https://deno.land/x/actionify@0.3.0/mod.ts';
+  import { job, step } from "https://deno.land/x/actionify@0.3.0/mod.ts";
 
   const newApiJob = job()
-    .runsOn('ubuntu-latest')
+    .runsOn("ubuntu-latest")
     // Multiple steps can be added as arguments
     .steps(
       step().run('echo "Hello World"'),
-      step().run('echo "The job was automatically triggered by a ${{ github.event_name }} event."'),
-      step().run('echo "This job is now running on a ${{ runner.os }} server hosted by GitHub!"'),
-      step().run('echo "The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."'),
-      step().name('Check out the repository code').uses('actions/checkout@v3'),
-      step().run('echo "The ${{ github.repository }} repository has been cloned to the runner."'),
-      step().run('echo "The workflow is now ready to test your code on the runner."'),
-      step().name('List files in your repository').run('ls -a'),
-      step().run((ctx) => `echo "This job's status is ${{ job.status }}."`),
+      step().name("Check out the repository code").uses("actions/checkout@v3"),
+      step().name("List files in your repository").run("ls -a"),
     );
   ```
 
 ### Features 🎉
 
 - When no version is supplied to `https://act.deno.dev/:org/:repo` auto redirect to the latest version.
+- `e.event()` retrieves the desired event from the provided github context.
+
+  ```ts
+  import checkout from "https://act.deno.dev/actions/checkout@3.0.2";
+  import { e, job } from "https://deno.land/x/actionify@0.3.0/mod.ts";
+
+  const example = job()
+    .runsOn("ubuntu-latest")
+    .steps(checkout())
+    .if((ctx) =>
+      e.contains(e.event(ctx.github, "push").head_commit.message, "do it!")
+    );
+  ```
 
 ### Bug Fixes
 
 - Allow hyphens (`-`) in `https://act.deno.dev/:org/:repo` org and repo segment of deployment URLs. This was causing repositories like https://act.deno.dev/actions/setup-node to fail.
+- Make some types less specific to allow for more flexibility in the API.
+
+### Other
+
+- New `napi` example for more advanced usage of `actionify`.
 
 ## 0.2.0
 

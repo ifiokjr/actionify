@@ -194,6 +194,23 @@ export class BackBlaze {
   }
 
   /**
+   * Shorthand for uploading a file.
+   */
+  async upload(
+    file: Uint8Array,
+    props: UploadProps,
+  ) {
+    const response = await this.getUploadUrl(props.bucketId);
+
+    if (response.error) {
+      return { success: false, error: response };
+    }
+
+    const { authorizationToken, uploadUrl } = response.data;
+    return this.uploadFile(file, { ...props, authorizationToken, uploadUrl });
+  }
+
+  /**
    * Uploads one file to B2, returning its unique file ID.
    */
   async uploadFile(
@@ -721,6 +738,13 @@ interface ListFileNameData {
    * file in the bucket.
    */
   nextFileName: string;
+}
+
+interface UploadProps extends Omit<UploadFileProps, keyof GetUploadUrlData> {
+  /**
+   * The bucket id to use.
+   */
+  bucketId: string;
 }
 
 interface UploadFileProps extends Omit<GetUploadUrlData, "bucketId"> {

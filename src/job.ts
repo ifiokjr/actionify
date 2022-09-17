@@ -2,12 +2,13 @@ import { isEmpty } from "./deps/just.ts";
 import { isFunction } from "./deps/just.ts";
 import { StringKeyOf } from "./deps/types.ts";
 import { ActionifyError, JobError } from "./errors.ts";
-import { Contextify, ExpressionValue } from "./expressions.ts";
+import { context, Contextify, ExpressionValue } from "./expressions.ts";
 import { AnyStep, Step } from "./step.ts";
 import type {
   ActionData,
   ActionTemplate,
   CombineAsUnion,
+  ContextData,
   DefaultsProp,
   EnvProps,
   ExpressionInputData,
@@ -805,6 +806,7 @@ export class Job<
   }
 
   /**
+   * @deprecated use `steps()` instead.
    * A job contains a sequence of tasks called steps. Steps can run commands,
    * run setup tasks, or run an action in your repository, a public repository,
    * or an action published in a Docker registry. Not all steps run actions, but
@@ -827,7 +829,7 @@ export class Job<
       | StepOutput<Id, GetStepOutputs<OutputStep>>
     >
   > {
-    const result = isFunction(step) ? step(Step.create()) : step;
+    const result = isFunction(step) ? step(Step.create(), context()) : step;
     this.#steps.push(result);
     // @ts-expect-error The builder pattern makes this difficult to infer
     return this;
@@ -837,11 +839,12 @@ export class Job<
    * Create multiple steps.
    */
   steps<Steps extends ReadonlyArray<StepCreator<Base, AnyStep>>>(
-    steps: Steps,
+    ...steps: Steps
   ): Job<CombineAsUnion<Base | GetSteps<Base, Steps>>> {
     const results = steps.map((step) =>
-      isFunction(step) ? step(Step.create()) : step
+      isFunction(step) ? step(Step.create(), context()) : step
     );
+
     this.#steps.push(...results);
     // @ts-expect-error The builder pattern makes this difficult to infer
     return this;
@@ -926,7 +929,7 @@ interface ConcurrentProps {
 }
 
 type RunsOnOptions = ExpressionValue<
-  `${Runner}` | LiteralString | string[]
+  `${Runner}` | LiteralString | LiteralString[]
 >;
 
 interface ContainerProps<Env extends EnvProps = EnvProps> {
@@ -992,6 +995,7 @@ type SecretsInput =
 type StepCreator<Base extends ActionTemplate, OutputStep extends AnyStep> =
   | ((
     step: Step<Base>,
+    ctx: ContextData<Base, "jobs:jobId:steps:with">,
   ) => OutputStep)
   | OutputStep;
 type StepsCreator<Base extends ActionTemplate, OutputStep extends AnyStep> =

@@ -1,5 +1,12 @@
 import { Context, proxy } from "./context.ts";
-import { ActionData, ActionTemplate, BaseContext } from "./types.ts";
+import {
+  ActionData,
+  ActionTemplate,
+  BaseContext,
+  GitHubContextItem,
+  GitHubData,
+  WorkflowEventName,
+} from "./types.ts";
 
 /**
  * An expression which is evaluated within the github action context.
@@ -88,10 +95,41 @@ export function contains(
     .cast<boolean>();
 }
 
+type ExtractEvents<Data extends ActionData<any>> = Data extends
+  ActionData<infer Base extends ActionTemplate> ? NonNullable<Base["events"]>
+  : WorkflowEventName;
+
+export function is<Event extends WorkflowEventName>(
+  github: Context<GitHubData<any>>,
+  events: Event[],
+): github is Context<GitHubContextItem<Event>> {
+  return !!(github && events);
+}
+
+/**
+ * Retrieve the desired github event from the provided context.
+ *
+ * ```ts
+ * import { e, job } from "https://deno.land/x/actionify@0.2.0/mod.ts";
+ * import checkout from "https://act.deno.dev/actions/checkout@3.0.2";
+ *
+ * const example = job()
+ *   .runsOn('ubuntu-latest')
+ *   .steps(checkout())
+ *   .if(ctx => e.contains(e.event(ctx.github, 'push').head_commit.message, 'do it!'))
+ * ```
+ */
+export function event<Event extends WorkflowEventName>(
+  github: Context<GitHubData<any>>,
+  _event: Event,
+): Context<GitHubContextItem<Event>["event"]> {
+  return github.event;
+}
+
 /**
  * Negates the truthiness of the provided expression / value.
  */
-export function not(content: ExpressionContent) {
+export function not(content: ExpressionContent | undefined) {
   return Expression
     .create("!", str(content))
     .cast<boolean>();

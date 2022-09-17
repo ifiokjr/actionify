@@ -5,13 +5,15 @@ import { snapshot } from "./helpers.ts";
 
 Deno.test("generate TypeScript module from cache.yml", async (t) => {
   const result = await generateTypeScriptFromAction(
-    import.meta.resolve("./fixtures/actions/cache.yml"),
-    "actions/cache@3.0.8",
+    {
+      url: import.meta.resolve("./fixtures/actions/cache.yml"),
+      uses: "actions/cache@3.0.8",
+    },
   );
 
-  await snapshot(t, result);
+  await snapshot(t, result.ts);
   await assertCanRun(
-    result,
+    result.ts,
     { path: "this/is/awesome", key: "this is a key" },
     {},
     "cache",
@@ -20,13 +22,15 @@ Deno.test("generate TypeScript module from cache.yml", async (t) => {
 
 Deno.test("generate TypeScript module from checkout.yml", async (t) => {
   const result = await generateTypeScriptFromAction(
-    import.meta.resolve("./fixtures/actions/checkout.yml"),
-    "actions/checkout@3.0.2",
+    {
+      url: import.meta.resolve("./fixtures/actions/checkout.yml"),
+      uses: "actions/checkout@3.0.2",
+    },
   );
 
-  await snapshot(t, result);
+  await snapshot(t, result.ts);
 
-  await assertCanRun(result, { ref: "main" }, { reff: "" }, "checkout");
+  await assertCanRun(result.ts, { ref: "main" }, { reff: "" }, "checkout");
 });
 
 async function assertCanRun(

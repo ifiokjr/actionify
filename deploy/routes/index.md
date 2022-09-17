@@ -1,5 +1,13 @@
 [`actionify`](https://github.com/ifiokjr/actionify) makes maintaining GitHub Actions easier. It is written in TypeScript and runs on deno. Every publicly versioned GitHub action is available here as a remote action.
 
+This is the original url:
+
+- `https://github.com/` <kbd> **actions**</kbd> `/` <kbd> **checkout**</kbd>
+
+And this is what it is transformed to:
+
+- `https://act.deno.dev/` <kbd> **actions**</kbd> `/` <kbd> **checkout**</kbd> `@` <kbd> **3.0.2**</kbd>
+
 Below is an example of importing actions to build and format your project.
 
 ```ts
@@ -28,4 +36,4 @@ export default defineWorkflows({ workflows: [ci] });
 
 This project is currently in early development and may see breaking changes before reaching v1.0.0. Please be aware of this.
 
-Once v1.0.0 is released, breaking changes will be avoided as much as possible and the API will be considered stable. All breaking changes will be prefixed with a leading `/v1` in the import path.
+Once `v1.0.0` is released, breaking changes will be avoided as much as possible and the API will be considered stable. All breaking changes will be prefixed with a leading `/v1` in the import path.

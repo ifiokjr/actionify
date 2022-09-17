@@ -19,32 +19,32 @@ const testJob = job()
   .strategy({ matrix: { deno, os } })
   .timeoutMinutes(5)
   .runsOn((ctx) => e.expr(ctx.matrix.os))
-  .step(envStep)
-  .steps(sharedSteps())
-  .step((step) => {
+  .steps(envStep)
+  .steps(...sharedSteps())
+  .steps((step) => {
     return step
       .name("🩺 Format")
       .uses("dprint/check@v2.0")
       .if((ctx) => e.eq(ctx.matrix.os, Runner.UbuntuLatest));
   })
-  .step((step) => {
+  .steps((step) => {
     return step
       .name("👩‍⚕️ Lint")
       .if((ctx) => e.eq(ctx.matrix.os, Runner.UbuntuLatest))
       .run("deno lint");
   })
-  .step((step) => {
+  .steps((step) => {
     return step
       .name("🩺 Typecheck")
       .if((ctx) => e.eq(ctx.matrix.os, Runner.UbuntuLatest))
       .run("deno task typecheck");
   })
-  .step((step) => {
+  .steps((step) => {
     return step
       .name("✅ Unittest")
       .run("deno task test");
   })
-  .step((step) => {
+  .steps((step) => {
     return step
       .name("📝 Docs")
       .if((ctx) => e.eq(ctx.matrix.os, Runner.UbuntuLatest))
@@ -55,9 +55,9 @@ const publishJob = job<{ jobs: "test" }>()
   .needs("test")
   .timeoutMinutes(5)
   .runsOn(Runner.UbuntuLatest)
-  .step(envStep)
-  .steps(sharedSteps(false))
-  .step((step) => {
+  .steps(envStep)
+  .steps(...sharedSteps(false))
+  .steps((step) => {
     return step
       .name("🦕 Publish")
       .env({ GITHUB_TOKEN: e.expr(e.ctx.secrets.GITHUB_TOKEN) })

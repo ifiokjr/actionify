@@ -11,13 +11,13 @@ import type {
 } from "./deps/types.ts";
 import type { Contextify, Expression, ExpressionValue } from "./expressions.ts";
 
-type ContextData<
+export type ContextData<
   Base extends ActionTemplate,
-  _Picked extends keyof ContextAvailability,
-  _Data extends ActionData<Base> = ActionData<Base>,
+  Picked extends keyof ContextAvailability,
+  Data extends ActionData<Base> = ActionData<Base>,
 > =
   // []
-  Contextify<{ [Key in ContextAvailability[_Picked]]: _Data[Key] }>;
+  Contextify<{ [Key in ContextAvailability[Picked]]: Data[Key] }>;
 // Contextify<ActionData<Base>>;
 
 export type ReplaceMethods<Thing extends HasActionTemplate<any>> = {
@@ -119,7 +119,7 @@ export enum Runner {
 }
 
 export interface ActionTemplate {
-  events?: keyof WorkflowEvents;
+  events?: WorkflowEventName;
   env?: string;
   services?: string;
   jobs?: string;
@@ -838,11 +838,11 @@ export interface DefaultEnv {
  */
 export type GitHubData<
   Base extends ActionTemplate,
-  Event extends keyof WorkflowEvents = NonNullable<Base["events"]>,
+  Event extends WorkflowEventName = NonNullable<Base["events"]>,
 > = Event extends string ? GitHubContextItem<Event>
-  : GitHubContextItem<keyof WorkflowEvents>;
+  : GitHubContextItem<WorkflowEventName>;
 
-export interface GitHubContextItem<Event extends keyof WorkflowEvents> {
+export interface GitHubContextItem<Event extends WorkflowEventName> {
   /**
    * The name of the action currently running, or the id of a step. GitHub
    * removes special characters, and uses the name __run when the current step
@@ -1116,6 +1116,7 @@ export interface WorkflowEvents {
   workflow_dispatch: WebhookEventMap["workflow_dispatch"];
   workflow_run: WebhookEventMap["workflow_run"];
 }
+export type WorkflowEventName = keyof WorkflowEvents;
 
 export type EnvProps = {
   [name: string]: ExpressionValue<string>;
@@ -1225,6 +1226,7 @@ export interface PushOptions {
    * https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#filter-pattern-cheat-sheet
    */
   paths?: readonly string[];
+  "paths-ignore"?: readonly string[];
 }
 export interface WorkflowCallOptions {
   inputs?: Record<string, WorkflowCallInput> | undefined;

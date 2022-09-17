@@ -1,5 +1,5 @@
 import type { Handlers, RouteConfig } from "$fresh/server.ts";
-import { generateTypeScriptFromAction } from "../../mod.ts";
+import { generateTypeScriptFromAction, Meta } from "../../mod.ts";
 import { BackBlaze } from "../modules/backblaze.ts";
 import { env } from "../modules/env.ts";
 import {
@@ -7,11 +7,7 @@ import {
   getFilesList,
   getLatestVersion,
 } from "../modules/jsdelivr.ts";
-import {
-  ACTIONS_PREFIX,
-  supportsHtmlResponse,
-  transformResponse,
-} from "../modules/utils.ts";
+import { supportsHtmlResponse, transformResponse } from "../modules/utils.ts";
 
 const bucketId = env.BACKBLAZE_BUCKET_ID;
 const bucketName = env.BACKBLAZE_BUCKET_NAME;
@@ -21,13 +17,14 @@ const applicationKeyId = env.BACKBLAZE_ID;
 export const handler: Handlers = {
   async GET(req, ctx) {
     const supportHtml = supportsHtmlResponse(req.headers);
-    let { org, repo, version } = ctx.params;
+    let { org, repo, version, actionify } = ctx.params;
     let shouldCache = true;
 
     const url = new URL(req.url);
 
-    if (!url.pathname.startsWith("/v0/")) {
-      const location = new URL(`/v0${url.pathname}`, url.origin).href;
+    if (!actionify) {
+      const location =
+        new URL(`/${Meta.VERSION}${url.pathname}`, url.origin).href;
       return new Response(null, { status: 302, headers: { location } });
     }
 
@@ -68,9 +65,10 @@ export const handler: Handlers = {
     await blaze.authorizeAccount();
 
     const uses = `${org}/${repo}@${version}`;
-    const fileName = `${ACTIONS_PREFIX}${org}/${repo}/${version}/action.ts`;
+    const tsFileName = `${actionify}/${org}/${repo}/${version}/action.ts`;
+    const metaFileName = `meta/${org}/${repo}/${version}/meta.json`;
 
-    const possibleResponse = await fetch(blaze.fileUrl(bucketName, fileName));
+    const possibleResponse = await fetch(blaze.fileUrl(bucketName, tsFileName));
 
     if (possibleResponse.ok) {
       return transformResponse({
@@ -83,40 +81,44 @@ export const handler: Handlers = {
       });
     }
 
-    // get the url to use to upload
-    const uploadUrlResponse = await blaze.getUploadUrl(bucketId);
-
-    if (!uploadUrlResponse.success) {
-      return new Response("Could not create the file", { status: 404 });
-    }
-
-    const { authorizationToken, uploadUrl } = uploadUrlResponse.data;
-
     // Create the file
-    const yamlUrl = await getCdnUrl({
+    const yamlUrl = getCdnUrl({
       org,
       path: actionYaml.name,
       repo,
       version,
     });
-    const tsContent = await generateTypeScriptFromAction(yamlUrl, uses);
-    const binary = new TextEncoder().encode(tsContent);
+
+    const { ts, action } = await generateTypeScriptFromAction({
+      url: yamlUrl,
+      uses,
+      version: actionify,
+    });
+    const tsBinary = new TextEncoder().encode(ts);
+    const metaBinary = new TextEncoder().encode(JSON.stringify(action));
 
     // upload the file
-    const result = await blaze.uploadFile(binary, {
-      authorizationToken,
-      fileName,
-      uploadUrl,
-      contentType: "application/typescript; charset=utf-8",
-      contentLength: binary.length,
-    });
+    const [result, _] = await Promise.all([
+      blaze.upload(tsBinary, {
+        bucketId,
+        fileName: tsFileName,
+        contentType: "application/typescript; charset=utf-8",
+        contentLength: tsBinary.length,
+      }),
+      blaze.upload(metaBinary, {
+        bucketId,
+        fileName: metaFileName,
+        contentType: "application/json; charset=utf-8",
+        contentLength: metaBinary.length,
+      }),
+    ]);
 
     if (result.error) {
       // An error occurred when uploading the TypeScript file.
       return new Response(null, { status: 404 });
     }
 
-    const response = await fetch(blaze.fileUrl(bucketName, fileName));
+    const response = await fetch(blaze.fileUrl(bucketName, tsFileName));
     return transformResponse({
       response,
       shouldCache,
@@ -130,5 +132,5 @@ export const handler: Handlers = {
 
 export const config: RouteConfig = {
   routeOverride:
-    "{/v0}?/:org([a-z][a-z0-9_-]+)/:repo([a-z][a-z0-9_-]+){@:version}?",
+    "{/:actionify(\\d+\\.\\d+\\.\\d+)}?/:org([a-z][a-z0-9_-]+)/:repo([a-z][a-z0-9_-]+){@:version}?",
 };

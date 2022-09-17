@@ -63,7 +63,9 @@ type Contextify<Type> = Type extends BaseContext<infer T> ? Contextify<T>
       : ContextifyObject<Type> & { "*": ContextifyObject<Type>[number] }
     : ContextifyObject<Type> & { "*": ContextifyObject<Type>[keyof Type] }
   : Type;
-type ContextifyObject<Type> = { [Key in keyof Type]: Context<Type[Key]> };
+type ContextifyObject<Type> = {
+  [Key in keyof Type]: Context<NonNullable<Type[Key]>>;
+};
 
 type IfAny<T, Y, N> = 0 extends (1 & T) ? Y : N;
 export type IsAny<T> = IfAny<T, true, never>;

@@ -2,7 +2,11 @@ import type { AnyCommand, Command } from "./commands.ts";
 import { isArray } from "./deps/just.ts";
 import { StringKeyOf } from "./deps/types.ts";
 import { ActionifyError } from "./errors.ts";
-import type { ExpressionValue } from "./expressions.ts";
+import type {
+  Expression,
+  ExpressionContent,
+  ExpressionValue,
+} from "./expressions.ts";
 import type {
   ActionTemplate,
   CombineAsUnion,
@@ -41,7 +45,7 @@ export class Step<Base extends ActionTemplate = ActionTemplate>
   }
 
   #id: string | undefined;
-  #if: ExpressionValue | undefined;
+  #if: ExpressionContent | undefined;
   #name: ExpressionValue<string> | undefined;
   #uses: string | undefined;
   #run: string | undefined;
@@ -142,7 +146,13 @@ export class Step<Base extends ActionTemplate = ActionTemplate>
    *   );
    * ```
    */
-  if(statement: WithContext<ExpressionValue, Base, "jobs:jobId:steps:if">) {
+  if(
+    statement: WithContext<
+      ExpressionContent | undefined,
+      Base,
+      "jobs:jobId:steps:if"
+    >,
+  ) {
     this.#if = getFromContext(statement);
     return this;
   }
@@ -226,7 +236,11 @@ export class Step<Base extends ActionTemplate = ActionTemplate>
    * ```
    */
   run<Type extends AnyCommand>(
-    run: WithContext<Listed<Type | string>, Base, "jobs:jobId:steps:run">,
+    run: WithContext<
+      Listed<Type | string | Expression>,
+      Base,
+      "jobs:jobId:steps:run"
+    >,
   ): Step<CombineAsUnion<Base | ExtractCommand<Type>>> {
     const value = getFromContext(run);
     this.#run = (isArray(value) ? value : [value])
