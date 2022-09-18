@@ -1,3 +1,7 @@
+import cache from "https://act.deno.dev/0.3.0/actions/cache@3.0.8";
+import checkout from "https://act.deno.dev/0.3.0/actions/checkout@3.0.2";
+import setupDeno from "https://act.deno.dev/0.3.0/denoland/setup-deno@1.1.0";
+import dprint from "https://act.deno.dev/0.3.0/dprint/check@2.1";
 import {
   commands,
   defineWorkflows,
@@ -17,15 +21,14 @@ const envStep = step().name("Set environment").run((ctx) =>
 
 const testJob = job()
   .strategy({ matrix: { deno, os } })
-  .timeoutMinutes(5)
+  .timeoutMinutes(20)
   .runsOn((ctx) => e.expr(ctx.matrix.os))
   .steps(envStep)
   .steps(...sharedSteps())
-  .steps((step) => {
-    return step
+  .steps((_, ctx) => {
+    return dprint()
       .name("🩺 Format")
-      .uses("dprint/check@v2.0")
-      .if((ctx) => e.eq(ctx.matrix.os, Runner.UbuntuLatest));
+      .if(e.eq(ctx.matrix.os, Runner.UbuntuLatest));
   })
   .steps((step) => {
     return step
@@ -77,25 +80,20 @@ export default defineWorkflows({
 
 function sharedSteps(withMatrix = true) {
   return [
-    step().name("🏴‍☠️ Checkout").uses("actions/checkout@v3"),
-    step<{ matrix: "deno" | "os"; env: "DENO_DIR" }>()
-      .name("📦 Cache")
-      .uses("actions/cache@v3")
-      .with((ctx) => ({
-        path: e.expr(ctx.env.DENO_DIR),
-        key: e.concat(
-          e.hashFiles("lock.json"),
-          "-",
-          withMatrix ? ctx.matrix.deno : "v1.x",
-          "-",
-          withMatrix ? ctx.matrix.os : Runner.UbuntuLatest,
-        ),
-      })),
-    step<{ matrix: "deno" }>()
-      .uses("denoland/setup-deno@v1")
-      .with((ctx) => ({
-        "deno-version": withMatrix ? e.expr(ctx.matrix.deno) : "v1.x",
-      })),
+    checkout().name("🏴‍☠️ Checkout"),
+    cache<{ matrix: "deno" | "os"; env: "DENO_DIR" }>((ctx) => ({
+      path: e.expr(ctx.env.DENO_DIR),
+      key: e.concat(
+        e.hashFiles("lock.json"),
+        "-",
+        withMatrix ? ctx.matrix.deno : "v1.x",
+        "-",
+        withMatrix ? ctx.matrix.os : Runner.UbuntuLatest,
+      ),
+    })).name("📦 Cache"),
+    setupDeno<{ matrix: "deno" }>((ctx) => ({
+      "deno-version": withMatrix ? e.expr(ctx.matrix.deno) : "v1.x",
+    })),
     step()
       .name("🔒 Lock")
       .run("deno task lock")

@@ -71,7 +71,7 @@ export default defineWorkflows({
 
   const checkProcess = Deno.run({
     cwd: root.pathname,
-    cmd: ["deno", "check", "-r", actionPath.pathname],
+    cmd: ["deno", "check", actionPath.pathname],
     stderr: "null",
     stdout: "null",
   });
@@ -87,7 +87,7 @@ export default defineWorkflows({
     cmd: [
       "deno",
       "run",
-      "-Ar",
+      "-A",
       cliPath.pathname,
       "-c",
       actionPath.pathname,

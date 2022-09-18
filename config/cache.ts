@@ -11,8 +11,6 @@ const entries = globber({
   excludeDirectories: true,
 });
 
-const CI = !!Deno.env.get("CI");
-
 for await (const entry of entries) {
   deps.push(entry.relative);
 }
@@ -24,21 +22,18 @@ const baseCommand = [
   "--import-map=import_map.json",
 ];
 
-if (!CI) {
-  baseCommand.push("--reload");
-}
-
 async function update() {
   log.info("Updating the `lock.json` file.");
 
   await Deno.run({
-    cmd: [...baseCommand, "--lock-write", ...deps],
+    cmd: [...baseCommand, "--reload", "--lock-write", ...deps],
     stdout: "piped",
     cwd: cwd.pathname,
   }).output();
 }
 
 async function load() {
+  const CI = !!Deno.env.get("CI");
   log.info("Loading the cache from `lock.json`.");
 
   const command = Deno.run({

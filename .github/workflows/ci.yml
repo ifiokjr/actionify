@@ -13,7 +13,7 @@ name: ci
 jobs:
   test:
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 5
+    timeout-minutes: 20
     strategy:
       matrix:
         deno:
@@ -27,13 +27,14 @@ jobs:
       - name: Set environment
         run: echo "DENO_DIR=${{ runner.temp }}/deno_cache" >> $GITHUB_ENV
       - name: 🏴‍☠️ Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@3.0.2
+        with: {}
       - name: 📦 Cache
-        uses: actions/cache@v3
+        uses: actions/cache@3.0.8
         with:
           path: ${{ env.DENO_DIR }}
           key: ${{ hashFiles('lock.json') }}-${{ matrix.deno }}-${{ matrix.os }}
-      - uses: denoland/setup-deno@v1
+      - uses: denoland/setup-deno@1.1.0
         with:
           deno-version: ${{ matrix.deno }}
       - name: 🔒 Lock
@@ -42,7 +43,8 @@ jobs:
         continue-on-error: true
       - if: ${{ matrix.os == 'ubuntu-latest' }}
         name: 🩺 Format
-        uses: dprint/check@v2.0
+        uses: dprint/check@2.1
+        with: {}
       - if: ${{ matrix.os == 'ubuntu-latest' }}
         name: 👩‍⚕️ Lint
         run: deno lint
@@ -62,13 +64,14 @@ jobs:
       - name: Set environment
         run: echo "DENO_DIR=${{ runner.temp }}/deno_cache" >> $GITHUB_ENV
       - name: 🏴‍☠️ Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@3.0.2
+        with: {}
       - name: 📦 Cache
-        uses: actions/cache@v3
+        uses: actions/cache@3.0.8
         with:
           path: ${{ env.DENO_DIR }}
           key: ${{ hashFiles('lock.json') }}-v1.x-ubuntu-latest
-      - uses: denoland/setup-deno@v1
+      - uses: denoland/setup-deno@1.1.0
         with:
           deno-version: v1.x
       - name: 🔒 Lock

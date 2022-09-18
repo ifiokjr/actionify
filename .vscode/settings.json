@@ -25,5 +25,11 @@
   },
   "[toml]": {
     "editor.defaultFormatter": "dprint.dprint"
+  },
+  "deno.suggest.imports.hosts": {
+    "https://deno.land": true,
+    "https://x.nest.land": true,
+    "https://crux.land": true,
+    "https://act.deno.dev": false
   }
 }

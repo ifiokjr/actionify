@@ -837,6 +837,7 @@
   "https://esm.sh/git-url-parse@12.0.0": "ac2e03e4be54ea9771ebe401bc218eb6b0d6e4b99d2a0f975dc697be1851c9ad",
   "https://esm.sh/he@1.2.0": "f2aad917e373ead4e85f950064cf1b76f51eb6c71fa1b22f8043073d9f4504bc",
   "https://esm.sh/marked@4.0.12": "db99ef7dc904421b52a9504c61034053aa3360ab5c7ae35b1c9c8bace4776cc6",
+  "https://esm.sh/p-limit@4.0.0": "9fcabd93ffa755f4288fbe6fbe12c06becb2b367d263ed56f9f3cf51b771b4b7",
   "https://esm.sh/prismjs@1.27.0": "dc660074a47fa8c63ac63bd8a3fe18b81881a72bbca51687e9947eb593c6bdab",
   "https://esm.sh/prismjs@1.29.0/components/prism-typescript?no-check": "998c5afe85a64a472479519e4833bf157f1dab402ec913f96e47b8d441bbbea9",
   "https://esm.sh/sanitize-html@2.7.0": "32e528e02698d27931d98ebb5584a77150806381c582b18130db1091b40ee266",
@@ -945,6 +946,8 @@
   "https://esm.sh/v95/node_buffer.js": "445d389cb8c9f9fad5ff869ca2c2a863d178d410795ebd5f2f39d9a029156d56",
   "https://esm.sh/v95/normalize-url@6.1.0/deno/normalize-url.js": "3271acc64c6bb16d09e7265fd8c514715eab3e1dbb3503a3ec8639745f5115cb",
   "https://esm.sh/v95/once@1.4.0/deno/once.js": "63f83852e906c8403c4e30d604fa64172472fa7cfbcd472ba74c1003dbe344c3",
+  "https://esm.sh/v95/p-limit@4.0.0/deno/p-limit.js": "a189265413092d83960aba93a92fe670e2d9ad07d009078788e28445d0aa0bb4",
+  "https://esm.sh/v95/p-limit@4.0.0/index.d.ts": "098ef3f011cfadd9e4ff013dd051a39545536793ecbb92da1b3c32b808a7c114",
   "https://esm.sh/v95/parse-path@5.0.0/deno/parse-path.js": "1ac12485798780b455c7757a3939da35387cd2b26e41724b4f1348cf84ece2a9",
   "https://esm.sh/v95/parse-srcset@1.0.2/deno/parse-srcset.js": "fd4a1cce0edd9af0f50bd7b36d9a475cc783be059a7c7894bad1800a37c8bda6",
   "https://esm.sh/v95/parse-url@7.0.2/deno/parse-url.js": "3a78390f6b61c470eeecce49b8109c581b3d1f3414355b73afc1ed820d4a9031",
@@ -958,5 +961,6 @@
   "https://esm.sh/v95/tunnel@0.0.6/deno/tunnel.js": "3d0d6cae9a33ac1de0151c7b3af1b451aa390d27b8af640bb4ef77016c3ebaa4",
   "https://esm.sh/v95/universal-user-agent@6.0.0/deno/universal-user-agent.js": "11cd1bafb437b9947079410ea995ad6349bf9625111714ebd74874103e9b484a",
   "https://esm.sh/v95/uuid@8.3.2/deno/uuid.js": "d06a7b1895d2c7ebc476a9156ac0d18cbe6dced2b50e841d5f89092dad17d30b",
-  "https://esm.sh/v95/wrappy@1.0.2/deno/wrappy.js": "1bae2b23d6610b0706d63344a9c305a491f53d74c6d0cbef86d81cc01e90fed5"
+  "https://esm.sh/v95/wrappy@1.0.2/deno/wrappy.js": "1bae2b23d6610b0706d63344a9c305a491f53d74c6d0cbef86d81cc01e90fed5",
+  "https://esm.sh/v95/yocto-queue@1.0.0/deno/yocto-queue.js": "2da97f41ebb5ec7ec24d3b293f2dc64c08421a8bade3e4ffc638c8f446cee6c8"
 }
