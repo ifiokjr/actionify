@@ -1,13 +1,7 @@
-import {
-  UnknownHandler,
-  UnknownHandlerContext,
-  UnknownPageProps,
-} from "$fresh/server.ts";
+import { UnknownHandlerContext, UnknownPageProps } from "$fresh/server.ts";
 import { tw } from "twind";
-import { getLogger } from "../deps/std.ts";
 
-export function handler(req: Request, ctx: UnknownHandlerContext) {
-  getLogger().info(req);
+export function handler(_req: Request, ctx: UnknownHandlerContext) {
   return ctx.render();
 }
 

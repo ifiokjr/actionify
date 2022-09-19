@@ -243,7 +243,7 @@ The main reason I created this project is to have type-safe control over GitHub 
 This could be fulfilled via a deno registry deployment allowing for remote actions to be imported and used in a type-safe way.
 
 ```ts
-import checkout from "https://act.deno.dev/actions/checkout@3.0.2";
+import checkout from "https://act.deno.dev/actions/checkout@v3.0.2";
 import {
   defineWorkflows,
   e,

@@ -6,12 +6,12 @@ This is the original url:
 
 And this is what it is transformed to:
 
-- `https://act.deno.dev/` <kbd> **actions**</kbd> `/` <kbd> **checkout**</kbd> `@` <kbd> **3.0.2**</kbd>
+- `https://act.deno.dev/` <kbd> **actions**</kbd> `/` <kbd> **checkout**</kbd> `@` <kbd> **v3.0.2**</kbd>
 
 Below is an example of importing actions to build and format your project.
 
 ```ts
-import checkout from "https://act.deno.dev/actions/checkout@3.0.2";
+import checkout from "https://act.deno.dev/actions/checkout@v3.0.2";
 import deno from "https://act.deno.dev/denoland/setup-deno@v1.1.0";
 import dprint from "https://act.deno.dev/dprint/check@v2.1";
 import {

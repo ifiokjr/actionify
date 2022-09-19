@@ -36,7 +36,7 @@
 - `e.event()` retrieves the desired event from the provided github context.
 
   ```ts
-  import checkout from "https://act.deno.dev/actions/checkout@3.0.2";
+  import checkout from "https://act.deno.dev/actions/checkout@v3.0.2";
   import { e, job } from "https://deno.land/x/actionify@0.3.0/mod.ts";
 
   const example = job()
@@ -72,7 +72,7 @@
 - Add a remote actions server to allow importing fully typed actions from `https://act.deno.dev`.
 
   ```ts
-  import checkout from "https://act.deno.dev/actions/checkout@3.0.2";
+  import checkout from "https://act.deno.dev/actions/checkout@v3.0.2";
   import {
     defineWorkflows,
     e,

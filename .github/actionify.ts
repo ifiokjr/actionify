@@ -1,7 +1,7 @@
-import cache from "https://act.deno.dev/0.3.0/actions/cache@3.0.8";
-import checkout from "https://act.deno.dev/0.3.0/actions/checkout@3.0.2";
-import setupDeno from "https://act.deno.dev/0.3.0/denoland/setup-deno@1.1.0";
-import dprint from "https://act.deno.dev/0.3.0/dprint/check@2.1";
+import cache from "https://act.deno.dev/0.3.0/actions/cache@v3.0.8";
+import checkout from "https://act.deno.dev/0.3.0/actions/checkout@v3.0.2";
+import setupDeno from "https://act.deno.dev/0.3.0/denoland/setup-deno@v1.1.0";
+import dprint from "https://act.deno.dev/0.3.0/dprint/check@v2.1";
 import {
   commands,
   defineWorkflows,

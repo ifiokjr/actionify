@@ -111,7 +111,7 @@ export function is<Event extends WorkflowEventName>(
  *
  * ```ts
  * import { e, job } from "https://deno.land/x/actionify@0.3.0/mod.ts";
- * import checkout from "https://act.deno.dev/actions/checkout@3.0.2";
+ * import checkout from "https://act.deno.dev/actions/checkout@v3.0.2";
  *
  * const example = job()
  *   .runsOn('ubuntu-latest')
