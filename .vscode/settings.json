@@ -2,6 +2,7 @@
   "deno.enable": true,
   "deno.lint": true,
   "deno.testing.enable": true,
+  // "deno.unstable": true,
   "[markdown]": {
     "editor.defaultFormatter": "dprint.dprint"
   },

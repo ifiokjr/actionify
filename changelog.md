@@ -4,6 +4,10 @@
 
 > [Compare](https://github.com/ifiokjr/actionify/compare/0.3.0...HEAD)
 
+### Fix
+
+- Fix `act.deno.dev` action versions.
+
 ## 0.3.0
 
 > [2022-09-17](https://github.com/ifiokjr/actionify/compare/0.2.0...0.3.0)

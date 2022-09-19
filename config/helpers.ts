@@ -1,12 +1,16 @@
 import { gitUrlParse, readLines, semver } from "./deps.ts";
 
+function clean(version: string) {
+  return semver.parse(version.trim().replace(/^[=v]+/, ""))?.version;
+}
+
 export async function getTagVersion(cwd = Deno.cwd()): Promise<string> {
   let version = "0.0.0";
   const stdout = Deno.run({ cmd: ["git", "tag"], cwd, stdout: "piped" }).stdout;
 
   try {
     for await (const line of readLines(stdout)) {
-      const cleaned = semver.clean(line) ?? version;
+      const cleaned = clean(line) ?? version;
       version = semver.gt(cleaned, version) ? cleaned : version;
     }
   } catch {

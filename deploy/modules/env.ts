@@ -5,4 +5,5 @@ export const env = createEnv([
   "BACKBLAZE_ID",
   "BACKBLAZE_BUCKET_NAME",
   "BACKBLAZE_BUCKET_ID",
+  "GITHUB_TOKEN",
 ]);

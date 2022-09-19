@@ -2,11 +2,8 @@ import type { Handlers, RouteConfig } from "$fresh/server.ts";
 import { generateTypeScriptFromAction, Meta } from "../../mod.ts";
 import { BackBlaze } from "../modules/backblaze.ts";
 import { env } from "../modules/env.ts";
-import {
-  getCdnUrl,
-  getFilesList,
-  getLatestVersion,
-} from "../modules/jsdelivr.ts";
+import { getLatestVersion } from "../modules/gh.ts";
+import { getCdnUrl, getFilesList } from "../modules/jsdelivr.ts";
 import { supportsHtmlResponse, transformResponse } from "../modules/utils.ts";
 
 const bucketId = env.BACKBLAZE_BUCKET_ID;
@@ -115,7 +112,10 @@ export const handler: Handlers = {
 
     if (result.error) {
       // An error occurred when uploading the TypeScript file.
-      return new Response(null, { status: 404 });
+      return new Response(
+        "Something went wrong when uploading the generated TypeScript file to storage! Open an issue on https://github.com/ifiokjr/actionify/issues.",
+        { status: 404 },
+      );
     }
 
     const response = await fetch(blaze.fileUrl(bucketName, tsFileName));
