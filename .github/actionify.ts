@@ -34,7 +34,13 @@ const testJob = job()
     return step
       .name("👩‍⚕️ Lint")
       .if((ctx) => e.eq(ctx.matrix.os, Runner.UbuntuLatest))
-      .run("deno lint");
+      .run("deno task lint:ts");
+  })
+  .steps((step) => {
+    return step
+      .name("👩‍⚕️ Lint Workflows")
+      .if((ctx) => e.eq(ctx.matrix.os, Runner.UbuntuLatest))
+      .run("deno task lint:workflows");
   })
   .steps((step) => {
     return step

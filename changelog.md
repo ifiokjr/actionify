@@ -4,6 +4,33 @@
 
 > [Compare](https://github.com/ifiokjr/actionify/compare/0.3.0...HEAD)
 
+### Features
+
+- Add a check command to the `cli`.
+
+  ```bash
+  Usage:   actionify
+  Version: 0.4.0
+
+  Description:
+
+    Generate reusable GitHub Action workflow files with TypeScript.
+
+  Options:
+
+    -h, --help               - Show this help.
+    -V, --version            - Show the version number for this program.
+    -c, --config   [config]  - The path to the TypeScript configuration file
+    -o, --output   [output]  - The path to the folder containing the generated workflow `.yml` files.
+
+  Commands:
+
+    check                   - Check that the workflows configurations are up to date with `.yml` files.
+    upgrade                 - Upgrade actionify executable to latest or given version.
+    help         [command]  - Show this help or the help of a sub-command.
+    completions             - Generate shell completions.
+  ```
+
 ### Fix
 
 - Fix `act.deno.dev` action versions.

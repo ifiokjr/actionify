@@ -47,7 +47,10 @@ jobs:
         with: {}
       - if: ${{ matrix.os == 'ubuntu-latest' }}
         name: 👩‍⚕️ Lint
-        run: deno lint
+        run: deno task lint:ts
+      - if: ${{ matrix.os == 'ubuntu-latest' }}
+        name: 👩‍⚕️ Lint Workflows
+        run: deno task lint:workflows
       - if: ${{ matrix.os == 'ubuntu-latest' }}
         name: 🩺 Typecheck
         run: deno task typecheck

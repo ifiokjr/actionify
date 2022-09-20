@@ -1,4 +1,4 @@
-import { generate, Meta } from "./mod.ts";
+import { check, generate, Meta } from "./mod.ts";
 import {
   Command,
   CompletionsCommand,
@@ -19,12 +19,12 @@ const main = new Command()
     "Generate reusable GitHub Action workflow files with TypeScript.",
   )
   .version(Meta.VERSION)
-  .option(
+  .globalOption(
     "-c, --config [config:string]",
     "The path to the TypeScript configuration file",
     { default: "./.github/actionify.ts" },
   )
-  .option(
+  .globalOption(
     "-o, --output [output:string]",
     "The path to the folder containing the generated workflow `.yml` files.",
     { default: "./.github/workflows" },
@@ -41,6 +41,27 @@ const main = new Command()
     const { default: workflowConfig } = await import(configPath);
 
     await generate({ ...workflowConfig, rootDirectory });
+  })
+  .command("check")
+  .description(
+    "Check that the workflows configurations are up to date with .yml files.",
+  )
+  .action(async (options) => {
+    const { output, config } = options;
+    const configPath = typeof config === "string"
+      ? resolve(config)
+      : resolve("./.github/actionify.ts");
+    const rootDirectory = typeof output === "string"
+      ? resolve(output)
+      : resolve("./.github/workflows");
+
+    const { default: workflowConfig } = await import(configPath);
+    const result = await check({ ...workflowConfig, rootDirectory });
+
+    if (result) {
+      console.warn(result);
+      Deno.exit(1);
+    }
   });
 
 const upgrade = new UpgradeCommand({

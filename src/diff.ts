@@ -3,13 +3,13 @@
 import { colors, diff, truncate } from "./deps/cli.ts";
 
 export function formatLine(line: string, outputTruncateLength?: number) {
-  return truncate(
-    line,
-    (outputTruncateLength ??
-      (Deno.consoleSize(Deno.stdout.rid).columns || 80)) - 4,
-  );
+  const length = outputTruncateLength ??
+      typeof Deno.consoleSize === "function"
+    ? Deno.consoleSize(Deno.stdout.rid).columns ?? 80
+    : 80;
+
+  return truncate(line, length - 4);
 }
-Deno.truncate;
 
 export interface DiffOptions {
   outputTruncateLength?: number;

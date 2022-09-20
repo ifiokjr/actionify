@@ -1,12 +1,13 @@
 {
   "tasks": {
-    "check": "deno task fix && deno task lint && deno task test && deno task test:docs && deno task typecheck && CI=true deno task lock",
+    "check": "deno task lint && deno task test && deno task test:docs && deno task typecheck && CI=true deno task lock",
     "fix:format": "dprint fmt",
     "fix:workflows": "deno run -A cli.ts",
     "fix": "deno task fix:format && deno task fix:workflows",
     "lint:format": "dprint check",
     "lint:ts": "deno lint",
-    "lint": "deno task lint:ts && deno task lint:format",
+    "lint:workflows": "deno run -A cli.ts check",
+    "lint": "deno task lint:ts && deno task lint:format && deno task lint:workflows",
     "lock:update": "deno run --allow-env=CI --allow-run=deno --allow-read config/cache.ts",
     "lock": "deno run --allow-run=deno --allow-env=CI --allow-read config/cache.ts",
     "publish": "deno run -A config/publish.ts",

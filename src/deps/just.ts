@@ -12,3 +12,4 @@ export { default as kebabCase } from "https://cdn.skypack.dev/just-kebab-case@4.
 export { default as pascalCase } from "https://cdn.skypack.dev/just-pascal-case@3.1.1?dts";
 export { default as snakeCase } from "https://cdn.skypack.dev/just-snake-case@3.0.1?dts";
 export { arrayIncludes } from "https://cdn.skypack.dev/ts-extras@0.11.0?dts";
+export { default as equal } from "https://esm.sh/fast-deep-equal@3.1.3";

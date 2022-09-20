@@ -2,6 +2,7 @@ import * as commands from "./src/commands.ts";
 import * as expressions from "./src/expressions.ts";
 
 export { generateTypeScriptFromAction } from "./src/actions/generate_typescript.ts";
+export { check } from "./src/check.ts";
 export { defineWorkflows, type DefineWorkflowsProps } from "./src/config.ts";
 export { generate } from "./src/generate.ts";
 export { type AnyJob, Job, job } from "./src/job.ts";
